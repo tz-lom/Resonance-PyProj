@@ -11,6 +11,9 @@ class Base:
     def name(self):
         return self._name
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
 
 class Channels(Base):
     def __init__(self, channels, samplingRate, id=None, name=None):

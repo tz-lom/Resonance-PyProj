@@ -1,10 +1,8 @@
 import numpy as np
 
 
-
-
 class Base:
-    def __init__(self, si, timestamp, *kargs):
+    def __new__(self, si, timestamp, *kargs):
         self._si = si
         self._ts = np.asarray(timestamp, dtype=np.longlong)
 
@@ -39,8 +37,14 @@ class Event(Base, np.chararray):
         if isinstance(ts, long) or isinstance(ts, int):
             ts = np.asarray([ts], dtype=np.longlong)
 
-        Base.__init__(obj, si, ts)
+        Base.__new__(obj, si, ts)
         return obj
+
+    def __eq__(self, other):
+        if isinstance(other, Event):
+            return (self._si == other._si) and (self._ts == other._ts).all() and np.chararray.__eq__(self, other).all()
+        else:
+            return np.chararray.__eq__(self, other)
 
 
 class Channels(Base, np.ndarray):
@@ -50,6 +54,12 @@ class Channels(Base, np.ndarray):
         if isinstance(ts, long) or isinstance(ts, int):
             ts = np.asarray([ts - i * 1E9 / si.samplingRate for i in xrange(np.size(obj, 0))], dtype=np.longlong)
 
-        Base.__init__(obj, si, ts)
+        Base.__new__(obj, si, ts)
         return obj
+
+    def __eq__(self, other):
+        if isinstance(other, Channels):
+            return (self._si == other._si) and (self._ts == other._ts).all() and np.ndarray.__eq__(self, other).all()
+        else:
+            return np.ndarray.__eq__(self, other)
 
