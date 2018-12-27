@@ -1,0 +1,6 @@
+venv
+build
+dist
+resonance.egg-info
+*.pyc
+.idea
