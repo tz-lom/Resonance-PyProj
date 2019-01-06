@@ -1,5 +1,5 @@
 import numpy as np
-
+from itertools import ifilterfalse, imap
 
 class Base:
     def __new__(self, si, timestamp, *kargs):
@@ -26,6 +26,12 @@ class Base:
         self._si = getattr(obj, '_si', None)
         self._ts = None
 
+    @staticmethod
+    def combine(*blocks):
+        si = blocks[0].SI
+        if len(list(ifilterfalse(lambda b: b.SI == si, blocks))) > 0:
+            raise Exception("All combined must be the same type")
+
 
 class Event(Base, np.chararray):
     def __new__(cls, si, ts, message):
@@ -51,8 +57,11 @@ class Channels(Base, np.ndarray):
     def __new__(cls, si, ts, data):
         obj = np.asarray(data).view(Channels)
 
-        if isinstance(ts, long) or isinstance(ts, int):
-            ts = np.asarray([ts - i * 1E9 / si.samplingRate for i in xrange(np.size(obj, 0))], dtype=np.longlong)
+        if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
+            obj = obj.reshape((obj.size / si.channels, si.channels))
+
+        if isinstance(ts, long) or isinstance(ts, int) or isinstance(ts, float):
+            ts = ts - np.flip(np.arange(0, np.size(obj, 0) - 1)) * 1E9/si.samplingRate
 
         Base.__new__(obj, si, ts)
         return obj
@@ -63,3 +72,13 @@ class Channels(Base, np.ndarray):
         else:
             return np.ndarray.__eq__(self, other)
 
+    @staticmethod
+    def combine(*blocks):
+        Base.combine(*blocks)
+        data = np.concatenate(blocks)
+        ts = np.concatenate(list(imap(lambda x: x.TS, blocks)))
+        return Channels(blocks[0].SI, ts, data)
+
+
+def combine(*blocks):
+    return type(blocks[0]).combine(*blocks)
