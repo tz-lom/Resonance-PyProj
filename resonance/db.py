@@ -66,6 +66,9 @@ class Channels(Base, np.ndarray):
         Base.__new__(obj, si, ts)
         return obj
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __eq__(self, other):
         if isinstance(other, Channels):
             return (self._si == other._si) and (self._ts == other._ts).all() and np.ndarray.__eq__(self, other).all()
