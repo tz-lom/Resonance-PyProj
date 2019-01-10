@@ -61,7 +61,7 @@ class Channels(Base, np.ndarray):
             obj = obj.reshape((obj.size / si.channels, si.channels))
 
         if isinstance(ts, long) or isinstance(ts, int) or isinstance(ts, float):
-            ts = ts - np.flip(np.arange(0, np.size(obj, 0) - 1)) * 1E9/si.samplingRate
+            ts = ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9/si.samplingRate
 
         Base.__new__(obj, si, ts)
         return obj
@@ -71,7 +71,7 @@ class Channels(Base, np.ndarray):
 
     def __eq__(self, other):
         if isinstance(other, Channels):
-            return (self._si == other._si) and (self._ts == other._ts).all() and np.ndarray.__eq__(self, other).all()
+            return (self._si == other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
         else:
             return np.ndarray.__eq__(self, other)
 

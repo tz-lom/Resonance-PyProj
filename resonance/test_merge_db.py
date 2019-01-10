@@ -34,7 +34,6 @@ class TestChannels(unittest.TestCase):
         same_by_calc -= offset
         self.assertEqual(origin, same_by_calc)
 
-
     def test_merge(self):
         c_si = si.Channels(5, 20)
 
