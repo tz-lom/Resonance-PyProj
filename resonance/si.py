@@ -31,4 +31,5 @@ class Channels(Base):
 
 
 class Event(Base):
-    pass
+    def __init__(self, id=None, name=None):
+        Base.__init__(self, id, name)

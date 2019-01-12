@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import ifilterfalse, imap
 
+
 class Base:
     def __new__(self, si, timestamp, *kargs):
         self._si = si
@@ -48,9 +49,28 @@ class Event(Base, np.chararray):
 
     def __eq__(self, other):
         if isinstance(other, Event):
-            return (self._si == other._si) and (self._ts == other._ts).all() and np.chararray.__eq__(self, other).all()
+            return (self._si == other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
         else:
             return np.chararray.__eq__(self, other)
+
+    @staticmethod
+    def make_empty(si):
+        obj = np.array(np.empty(0), dtype=np.str).view(Event)
+
+        ts = np.array(np.empty(0), dtype=np.longlong)
+        Base.__new__(obj, si, ts)
+        return obj
+
+    @staticmethod
+    def combine(*blocks):
+        Base.combine(*blocks)
+        message = np.concatenate(blocks)
+        if message.size > 1:
+            ts = np.concatenate(list(imap(lambda x: x.TS, blocks)))
+        else:
+            ts = np.empty(0)
+
+        return Event(blocks[0].SI, ts, message)
 
 
 class Channels(Base, np.ndarray):

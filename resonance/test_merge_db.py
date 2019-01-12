@@ -45,3 +45,44 @@ class TestChannels(unittest.TestCase):
         O = db.Channels(c_si, timeoption2ts(c_si, 224), np.arange(1, 121))
 
         self.assertEqual(O, M)
+
+
+class TestEvents(unittest.TestCase):
+
+    def test_merge(self):
+        e_si = si.Event()
+
+        ''' event test '''
+        events = [db.Event(e_si, 3,  "a"),
+                  db.Event(e_si, 5,  "b"),
+                  db.Event.make_empty(e_si),
+                  db.Event(e_si, 12, "c")]
+
+        result = db.combine(*events)
+
+        target = [db.Event(e_si, 0, "a"),
+                  db.Event(e_si, 0, "b"),
+                  db.Event(e_si, 0, "c")]
+
+        type(target[0]).TS = 3
+        type(target[1]).TS = 5
+        type(target[2]).TS = 12
+
+        self.assertEqual(result[0], target[0])
+        self.assertEqual(result[1], target[1])
+        self.assertEqual(result[2], target[2])
+
+        ''' event empty test '''
+        emptyEvents = [db.Event.make_empty(e_si),
+                       db.Event.make_empty(e_si)]
+
+        result2 = db.combine(*emptyEvents)
+
+        self.assertEqual(result2, db.Event.make_empty(e_si))
+
+        ''' event empty test 1 '''
+        emptyEvent = [db.Event.make_empty(e_si)]
+
+        result3 = db.combine(*emptyEvent)
+
+        self.assertEqual(result3, db.Event.make_empty(e_si))
