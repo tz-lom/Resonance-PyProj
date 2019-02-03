@@ -45,3 +45,11 @@ class TestChannels(unittest.TestCase):
         O = db.Channels(c_si, timeoption2ts(c_si, 224), np.arange(1, 121))
 
         self.assertEqual(O, M)
+
+    def test_empty(self):
+        c_si = si.Channels(5, 20)
+        d = db.make_empty(c_si)
+
+        self.assertEqual(d.shape, (0, 5))
+        self.assertEqual(d.TS.shape, (0,))
+        self.assertEqual(d.SI, c_si)
