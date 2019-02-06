@@ -1,7 +1,11 @@
+import resonance.db as db
+
+
 class Base:
-    def __init__(self, id=None, name=None):
+    def __init__(self, id=None, name=None, online=False):
         self._id = id
         self._name = name
+        self.online = online
 
     @property
     def id(self):
@@ -20,6 +24,7 @@ class Channels(Base):
         Base.__init__(self, id, name)
         self._channels = channels
         self._samplingRate = samplingRate
+        self.db_type = db.Channels
 
     @property
     def channels(self):
@@ -29,6 +34,9 @@ class Channels(Base):
     def samplingRate(self):
         return self._samplingRate
 
+
+def is_channels(x):
+    return isinstance(x, Channels) or isinstance(x.SI, Channels)
 
 class Event(Base):
     def __init__(self, id=None, name=None):

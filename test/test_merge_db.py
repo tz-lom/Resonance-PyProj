@@ -46,6 +46,14 @@ class TestChannels(unittest.TestCase):
 
         self.assertEqual(O, M)
 
+   def test_empty(self):
+        c_si = si.Channels(5, 20)
+        d = db.make_empty(c_si)
+
+        self.assertEqual(d.shape, (0, 5))
+        self.assertEqual(d.TS.shape, (0,))
+        self.assertEqual(d.SI, c_si)
+
 
 class TestEvents(unittest.TestCase):
 
@@ -86,3 +94,4 @@ class TestEvents(unittest.TestCase):
         result3 = db.combine(*emptyEvent)
 
         self.assertEqual(result3, db.Event.make_empty(e_si))
+

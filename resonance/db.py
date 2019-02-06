@@ -1,11 +1,12 @@
 import numpy as np
-from itertools import ifilterfalse, imap
+from itertools import filterfalse
+
 
 
 class Base:
     def __new__(self, si, timestamp, *kargs):
         self._si = si
-        self._ts = np.asarray(timestamp, dtype=np.longlong)
+        self._ts = np.asarray(timestamp, dtype=np.int64)
 
     @property
     def SI(self):
@@ -30,7 +31,7 @@ class Base:
     @staticmethod
     def combine(*blocks):
         si = blocks[0].SI
-        if len(list(ifilterfalse(lambda b: b.SI == si, blocks))) > 0:
+        if len(list(filterfalse(lambda b: b.SI == si, blocks))) > 0:
             raise Exception("All combined must be the same type")
 
 
@@ -41,7 +42,7 @@ class Event(Base, np.chararray):
 
         obj = np.asarray(message, dtype=np.str).view(Event)
 
-        if isinstance(ts, long) or isinstance(ts, int):
+        if isinstance(ts, float) or isinstance(ts, int):
             ts = np.asarray([ts], dtype=np.longlong)
 
         Base.__new__(obj, si, ts)
@@ -78,9 +79,9 @@ class Channels(Base, np.ndarray):
         obj = np.asarray(data).view(Channels)
 
         if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
-            obj = obj.reshape((obj.size / si.channels, si.channels))
+            obj = obj.reshape((int(obj.size / si.channels), si.channels))
 
-        if isinstance(ts, long) or isinstance(ts, int) or isinstance(ts, float):
+        if isinstance(ts, int) or isinstance(ts, float):
             ts = ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9/si.samplingRate
 
         Base.__new__(obj, si, ts)
@@ -99,9 +100,23 @@ class Channels(Base, np.ndarray):
     def combine(*blocks):
         Base.combine(*blocks)
         data = np.concatenate(blocks)
-        ts = np.concatenate(list(imap(lambda x: x.TS, blocks)))
+        ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
         return Channels(blocks[0].SI, ts, data)
+
+    @staticmethod
+    def make_empty(si):
+        obj = np.empty((0, si.channels)).view(Channels)
+        ts =  np.array([], dtype=np.int64)
+        Base.__new__(obj, si, ts)
+        return obj
 
 
 def combine(*blocks):
     return type(blocks[0]).combine(*blocks)
+<<<<<<< HEAD
+=======
+
+
+def make_empty(si):
+    return si.db_type.make_empty(si)
+>>>>>>> dc6a868f71fc9634a8529a803e590cc2ff3d882b
