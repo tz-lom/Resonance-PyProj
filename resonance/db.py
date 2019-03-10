@@ -67,7 +67,7 @@ class Event(Base, np.chararray):
         Base.combine(*blocks)
         message = np.concatenate(blocks)
         if message.size > 1:
-            ts = np.concatenate(list(imap(lambda x: x.TS, blocks)))
+            ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
         else:
             ts = np.empty(0)
 
@@ -106,17 +106,80 @@ class Channels(Base, np.ndarray):
     @staticmethod
     def make_empty(si):
         obj = np.empty((0, si.channels)).view(Channels)
-        ts =  np.array([], dtype=np.int64)
+        ts = np.array([], dtype=np.int64)
+        Base.__new__(obj, si, ts)
+        return obj
+
+
+class SingleWindow(Base, np.ndarray):
+    def __new__(cls, ts, data):
+        obj = np.asarray(data).view(SingleWindow)
+
+        if isinstance(ts, float) or isinstance(ts, int):
+            ts = np.asarray([ts], dtype=np.longlong)
+
+        Base.__new__(obj, ts, data)
+        return obj
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __eq__(self, other):
+        if isinstance(other, SingleWindow):
+            return np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+        else:
+            return np.ndarray.__eq__(self, other)
+
+
+class Window(Base, np.ndarray):
+    def __new__(cls, si, ts, data):
+
+        if isinstance(ts, int) or isinstance(ts, float):
+            ts = ts - np.flip(np.arange(0, np.size(data, 0) / si.channels)) * 1E9/si.samplingRate
+
+        obj = np.array(SingleWindow(ts, data)).view(Window)
+        if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
+            obj = obj.reshape((int(obj.size / si.channels), si.channels))
+
+        Base.__new__(obj, si, ts)
+        return obj
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __eq__(self, other):
+        if isinstance(other, Window):
+            #@todo: debug code
+            print(self._ts)
+            print(other._ts)
+            return (self._si == other._si) and np.array_equal(self, other)
+        else:
+            return np.ndarray.__eq__(self, other)
+
+    @property
+    def TS(self):
+        return self._ts
+
+    @staticmethod
+    def combine(*blocks):
+        Base.combine(*blocks)
+        data = np.concatenate(blocks)
+        ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
+        return Window(blocks[0].SI, ts, data)
+
+    @staticmethod
+    def make_empty(si):
+        obj = np.empty((0, si.channels)).view(Window)
+        ts = np.array([], dtype=np.int64)
         Base.__new__(obj, si, ts)
         return obj
 
 
 def combine(*blocks):
     return type(blocks[0]).combine(*blocks)
-<<<<<<< HEAD
-=======
 
 
 def make_empty(si):
     return si.db_type.make_empty(si)
->>>>>>> dc6a868f71fc9634a8529a803e590cc2ff3d882b
+
+

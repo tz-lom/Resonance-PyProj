@@ -21,7 +21,7 @@ class TestChannels(unittest.TestCase):
         different_size = db.Channels(c_si, timeoption2ts(c_si, time), data.repeat(2))
         self.assertNotEqual(origin, different_size)
 
-        different_time = db.Channels(c_si, timeoption2ts(c_si, time*2), data)
+        different_time = db.Channels(c_si, timeoption2ts(c_si, time * 2), data)
         self.assertNotEqual(origin, different_time)
 
         c_si2 = si.Channels(5, 21)
@@ -29,7 +29,7 @@ class TestChannels(unittest.TestCase):
         self.assertNotEqual(origin, different_si)
 
         offset = 10
-        same_by_calc = db.Channels(c_si, timeoption2ts(c_si, time), data+offset)
+        same_by_calc = db.Channels(c_si, timeoption2ts(c_si, time), data + offset)
         self.assertNotEqual(origin, same_by_calc)
         same_by_calc -= offset
         self.assertEqual(origin, same_by_calc)
@@ -46,7 +46,7 @@ class TestChannels(unittest.TestCase):
 
         self.assertEqual(O, M)
 
-   def test_empty(self):
+    def test_empty(self):
         c_si = si.Channels(5, 20)
         d = db.make_empty(c_si)
 
@@ -61,8 +61,8 @@ class TestEvents(unittest.TestCase):
         e_si = si.Event()
 
         ''' event test '''
-        events = [db.Event(e_si, 3,  "a"),
-                  db.Event(e_si, 5,  "b"),
+        events = [db.Event(e_si, 3, "a"),
+                  db.Event(e_si, 5, "b"),
                   db.Event.make_empty(e_si),
                   db.Event(e_si, 12, "c")]
 
@@ -94,4 +94,32 @@ class TestEvents(unittest.TestCase):
         result3 = db.combine(*emptyEvent)
 
         self.assertEqual(result3, db.Event.make_empty(e_si))
+
+
+
+class TestWindow(unittest.TestCase):
+    def test_merge(self):
+
+        #window test
+        w_si = si.Window(5, 20, 300)
+
+        A = db.Window(w_si, 3, np.arange(1, 201))
+        B = db.Window(w_si, 6, np.arange(201, 401))
+        C = db.Window(w_si, 35, np.arange(401, 601))
+
+        M = db.combine(A, B, C)
+
+        O = db.Window(w_si, 35, np.arange(1, 601))
+
+        self.assertEqual(O, M)
+
+
+        # empty window test
+        emptyWindows = [db.Window.make_empty(w_si), db.Window.make_empty(w_si)]
+
+        result2 = db.combine(*emptyWindows)
+
+        self.assertEqual(result2, db.Window.make_empty(w_si))
+
+
 
