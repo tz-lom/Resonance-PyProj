@@ -1,5 +1,6 @@
 import resonance
 import resonance.db as db
+import resonance.events as events
 #
 #  run.offline <- function(inputs, blocks, code, env=new.env()) {
 #
@@ -54,7 +55,7 @@ def offline(input, blocks, code):
     def input(id):
         return input_list[id]
 
-    def create_output(name, data):
+    def create_output(data, name):
         results[name] = data
 
     resonance.input = input
@@ -63,3 +64,163 @@ def offline(input, blocks, code):
     exec(code)
 
     return results
+
+
+#
+# old_inputs <- inputs
+##
+#   inputs <- mapply(FUN=function(x, id){
+#     x$online <- T
+#     if(is.null(x$id) || x$id == -1){
+#       x$id = id
+#     }
+#     x
+#   }, inputs, seq_len(length(inputs)), SIMPLIFY = FALSE)
+#
+#   blocks <- lapply(blocks, function(x){
+#     SI(x) <- inputs[sapply(old_inputs, identical, SI(x))][[1]]
+#     x
+#   })
+#
+#   sis <- list()
+#   datas <- list()
+#   siNames <- list()
+#   timers <- data.frame(id=integer(), time=bit64::integer64(), timeout=numeric(), singleShot=logical())
+#   currentTime <- nanotime(0)
+#
+#   processQueue <- function(){
+#     Q <- popQueue()
+#     lapply(Q, function(x){
+#       if(x$cmd == 'createOutputStream'){
+#         L <- x$args
+#         sis[[L$id]] <<- L[!(names(L) %in% c('id', 'name', 'online'))]
+#         siNames[[L$id]] <<- L$name
+#         datas[[L$name]] <<- list(makeEmpty(sis[[L$id]]))
+#       }
+#       if(x$cmd == 'sendBlockToStream'){
+#         si <- sis[[x$args$id]]
+#
+#         data <- x$args$data
+#
+#         datas[[siNames[[x$args$id]]]] <<- c(
+#           datas[[siNames[[x$args$id]]]],
+#           list(
+#             DB.something(
+#               si,
+#               TS(x$args$data),
+#               data
+#             )
+#           )
+#         )
+#       }
+#       if(x$cmd == 'startTimer'){
+#         timers <<- rbind(
+#           timers,
+#           data.frame(
+#             id = x$args$id,
+#             time = currentTime + x$args$timeout*1E6,
+#             timeout = x$args$timeout*1E6,
+#             singleShot = x$args$singleShot
+#           ))
+#       }
+#       if(x$cmd == 'stopTimer'){
+#         timers <<- timers[timers$id != x$args$id, ]
+#       }
+#     })
+#   }
+#
+#   # actual execution
+#
+#   onPrepare(inputs, code, env)
+#   processQueue()
+#
+#   onStart()
+#   processQueue()
+#
+#   lapply(blocks, function(x){
+#     currentTime <<- lastTS(x)
+#     # maybe some timers will trigger before this data block
+#     while(nrow(timers)>0 && length(toProcess <- which(timers$time<currentTime))>0){
+#       toProcess <- toProcess[order(timers$time[toProcess])[1]]
+#
+#       timer <- timers[toProcess, ]
+#       currentTime <<- timer$time
+#       onTimer(timer$id, timer$time)
+#       processQueue()
+#       if(!timer$singleShot){
+#         timers[toProcess, 'time'] <<- currentTime + timer$timeout
+#       } else {offline
+#
+
+def online(input, blocks, code):
+    outputs = {}
+
+    id = 100
+    for si in input:
+        si.online = True
+        if si.id is None:
+            si._id = id
+            id += 1
+
+    def process_queue():
+        queue = resonance.internal.pop_queue()
+        if len(queue) > 0:
+            for cmd, data in queue:
+                if cmd == 'createOutputStream':
+                    outputs[data.name] = [db.make_empty(data._source)]
+                    pass
+                if cmd == 'sendBlockToStream':
+                    si, block = data
+                    outputs[si.name].append(block)
+                    pass
+            #       if(x$cmd == 'createOutputStream'){
+            #         L <- x$args
+            #         sis[[L$id]] <<- L[!(names(L) %in% c('id', 'name', 'online'))]
+            #         siNames[[L$id]] <<- L$name
+            #         datas[[L$name]] <<- list(makeEmpty(sis[[L$id]]))
+            #       }
+            #       if(x$cmd == 'sendBlockToStream'){
+            #         si <- sis[[x$args$id]]
+            #
+            #         data <- x$args$data
+            #
+            #         datas[[siNames[[x$args$id]]]] <<- c(
+            #           datas[[siNames[[x$args$id]]]],
+            #           list(
+            #             DB.something(
+            #               si,
+            #               TS(x$args$data),
+            #               data
+            #             )
+            #           )
+            #         )
+            #       }
+            #       if(x$cmd == 'startTimer'){
+            #         timers <<- rbind(
+            #           timers,
+            #           data.frame(
+            #             id = x$args$id,
+            #             time = currentTime + x$args$timeout*1E6,
+            #             timeout = x$args$timeout*1E6,
+            #             singleShot = x$args$singleShot
+            #           ))
+            #       }
+            #       if(x$cmd == 'stopTimer'){
+            #         timers <<- timers[timers$id != x$args$id, ]
+            #       }
+            #     })
+
+    events.on_prepare(code, input)
+    process_queue()
+
+    events.on_start()
+    process_queue()
+
+    for block in blocks:
+        events.on_data_block(block)
+        process_queue()
+
+    events.on_stop()
+    process_queue()
+
+    return {name: db.combine(*values) for name, values in outputs.items()}

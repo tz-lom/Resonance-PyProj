@@ -1,4 +1,45 @@
 from resonance.db import Base as DataBlockBase
+import resonance.si
+import numpy as np
+import typing
+
+
+class ExecutionPlan:
+    def __init__(self):
+        self.plan = {}
+        self.inputs_data = []
+        self.next_output_id = 1
+        self.next_stream_id = 1
+
+
+class ExecutionStep:
+    def __init__(self, inputs, outputs, call):
+        self.inputs = inputs
+        self.outputs = outputs
+        self.call = call
+
+
+execution_plan = ExecutionPlan()
+
+queue = []
+
+
+def _add_to_queue(name, data):
+    queue.append((name, data))
+
+
+def pop_queue():
+    global queue
+    ret = queue
+    queue = []
+    return ret
+
+add_to_queue = _add_to_queue
+
+
+def reset():
+    global execution_plan
+    execution_plan = ExecutionPlan()
 
 
 def declare_transformation(operator):
@@ -17,15 +58,192 @@ class Processor:
         pass
 
     def call(self, *inputs):
-        self.prepare(*inputs)
+        outputs_si = self.prepare(*inputs)
 
         data_streams = list(filter(lambda x: isinstance(x, DataBlockBase), inputs))
 
         if data_streams[0].SI.online:
             # @todo: do all execution plan related stuff
-            return self.online(*data_streams)
+
+            global execution_plan
+            id = data_streams[0].SI.id
+            input_si = list(map(lambda x: x.SI if isinstance(x, resonance.db.Base) else x, inputs))
+
+            # @todo: this could be either "array" or si object
+            outputs_si._id = execution_plan.next_stream_id
+            execution_plan.next_stream_id += 1
+            outputs_si.online = True
+
+            execution_plan.plan[id] = ExecutionStep(input_si, outputs_si, self)
+
+            return data_streams
         else:
             if getattr(self, 'offline', None) is None:
                 return self.online(*data_streams)
             else:
                 return self.offline(*data_streams)
+
+#   processor(
+#     data,
+#     prepare = function(env){
+#
+#       id <- .execution_plan$nextOutputId
+#       .execution_plan$nextOutputId <- .execution_plan$nextOutputId+1
+#
+#       args <- SI(data)
+#       args$id <- id
+#       args$name <- name
+#
+#       do.call(addToQueue, c(list("createOutputStream"), args))
+#
+#       env$id <- id
+#
+#       if(SI.is.channels(data))
+#       {
+#         env$cb <- function(data){
+#           if(length(data)>0){
+#             addToQueue(
+#               "sendBlockToStream",
+#               id = id,
+#               data= data
+#             )
+#           }
+#           list()
+#         }
+#       }
+#       else if(SI.is.event(data))
+#         {
+#         env$cb <- function(data){
+#           for(d in data){
+#             addToQueue(
+#               "sendBlockToStream",
+#               id = id,
+#               data= d
+#             )
+#           }
+#           list()
+#         }
+#       }
+#       else if(SI.is.window(data))
+#       {
+#         env$cb <- function(data){
+#           for(d in data){
+#             addToQueue(
+#               "sendBlockToStream",
+#               id = id,
+#               data= d
+#             )
+#           }
+#           list()
+#         }
+#       }
+#       else if(SI.is.epoch(data))
+#       {
+#         env$cb <- function(data){
+#           for(d in data){
+#             addToQueue(
+#               "sendBlockToStream",
+#               id=id,
+#               data=d
+#             )
+#           }
+#           list()
+#         }
+#       }
+#       else
+#       {
+#         stop("[createOutput] Unsupported stream type=",SI(data)$type, call.=F)
+#       }
+#
+#       SI.outputStream(name, id)
+#
+#     },
+#     online = function(data){
+#       cb(data)
+#     }
+#   )
+@declare_transformation
+class create_output(Processor):
+    def __init__(self):
+        self._si = None
+        self._callback = None
+
+    def _send_channels(self, data: resonance.db.Channels):
+        if np.size(data, 0) > 0:
+            add_to_queue('sendBlockToStream', (self._si, data))
+        return resonance.db.OutputStream(self._si)
+
+    def prepare(self, stream: resonance.db.Base, name: str):
+        global execution_plan
+
+        id = execution_plan.next_output_id
+
+        execution_plan.next_output_id += 1
+
+        if isinstance(stream.SI, resonance.si.Channels):
+            self._callback = self._send_channels
+            self._si = resonance.si.OutputStream(id, name, stream.SI)
+            add_to_queue('createOutputStream', self._si)
+        else:
+            raise Exception("Unsupported stream type")
+    #       {
+    #         env$cb <- function(data){
+    #           if(length(data)>0){
+    #             addToQueue(
+    #               "sendBlockToStream",
+    #               id = id,
+    #               data= data
+    #             )
+    #           }
+    #           list()
+    #         }
+    #       }
+    #       else if(SI.is.event(data))
+    #         {
+    #         env$cb <- function(data){
+    #           for(d in data){
+    #             addToQueue(
+    #               "sendBlockToStream",
+    #               id = id,
+    #               data= d
+    #             )
+    #           }
+    #           list()
+    #         }
+    #       }
+    #       else if(SI.is.window(data))
+    #       {
+    #         env$cb <- function(data){
+    #           for(d in data){
+    #             addToQueue(
+    #               "sendBlockToStream",
+    #               id = id,
+    #               data= d
+    #             )
+    #           }
+    #           list()
+    #         }
+    #       }
+    #       else if(SI.is.epoch(data))
+    #       {
+    #         env$cb <- function(data){
+    #           for(d in data){
+    #             addToQueue(
+    #               "sendBlockToStream",
+    #               id=id,
+    #               data=d
+    #             )
+    #           }
+    #           list()
+    #         }
+    #       }
+    #       else
+    #       {
+    #         stop("[createOutput] Unsupported stream type=",SI(data)$type, call.=F)
+    #       }
+    #
+        return self._si
+
+    def online(self, data: resonance.db.Base, _name: str):
+        ret = self._callback(data)
+        return ret
