@@ -22,7 +22,7 @@ class TestSimpleTransformation(unittest.TestCase):
     def test_run_offline(self):
         code = '''
 from resonance import *
-createOutput('foo', input(0))
+createOutput(input(0), 'foo')
 '''
 
         s = si.Channels(2, 20)
@@ -32,4 +32,17 @@ createOutput('foo', input(0))
 
         self.assertEqual(results, {'foo': d})
 
+
+    def test_run_online(self):
+        code = '''
+from resonance import *
+createOutput(input(0), 'foo')
+        '''
+
+        s = si.Channels(2, 20)
+        d = db.Channels(s, 300, np.arange(1, 27))
+
+        results = run.online([s], [d], code)
+
+        self.assertEqual(results, {'foo': d})
 
