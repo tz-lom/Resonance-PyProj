@@ -59,7 +59,6 @@ def on_stop():
 
 
 def on_prepare(code, descriptions):
-    print(">>", len(descriptions), "<<")
     internal.reset()
     internal.execution_plan.inputs_data = list(map(db.make_empty, descriptions))
     internal.execution_plan.next_stream_id = len(descriptions) + 1

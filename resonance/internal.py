@@ -168,7 +168,7 @@ class create_output(Processor):
         self._si = None
         self._callback = None
 
-    def _send_channels(self, data: resonance.db.Channels):
+    def _send_np_based(self, data: resonance.db.Channels):
         if np.size(data, 0) > 0:
             add_to_queue('sendBlockToStream', (self._si, data))
         return resonance.db.OutputStream(self._si)
@@ -180,8 +180,8 @@ class create_output(Processor):
 
         execution_plan.next_output_id += 1
 
-        if isinstance(stream.SI, resonance.si.Channels):
-            self._callback = self._send_channels
+        if isinstance(stream.SI, resonance.si.Channels) or isinstance(stream.SI, resonance.si.Event):
+            self._callback = self._send_np_based
             self._si = resonance.si.OutputStream(id, name, stream.SI)
             add_to_queue('createOutputStream', self._si)
         else:
