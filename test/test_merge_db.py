@@ -108,23 +108,33 @@ class TestEvents(unittest.TestCase):
 class TestWindow(unittest.TestCase):
     def test_merge(self):
         # window test
-        w_si = si.Window(5, 20, 250)
+        w_si = si.Window(3, 7, 250)
 
-        A = db.Window(w_si, 3, np.arange(1, 101))
-        B = db.Window(w_si, 6, np.arange(101, 201))
-        C = db.Window(w_si, 35, np.arange(201, 301))
+        data_a = np.arange(1, 22).reshape((7, 3))
+        data_b = np.arange(22, 43).reshape((7, 3))
+        data_c = np.arange(43, 64).reshape((7, 3))
+
+        time_a = 3
+        time_b = 6
+        time_c = 35
+
+        A = db.Window(w_si, time_a, data_a)
+        B = db.Window(w_si, time_b, data_b)
+        C = db.Window(w_si, time_c, data_c)
 
         M = db.combine(A, B, C)
 
-        O = db.Window(w_si, 35, np.arange(1, 301))
+        self.assertEqual(M[0], data_a)
+        self.assertEqual(M[1], data_b)
+        self.assertEqual(M[2], data_c)
 
-        self.assertEqual(O, M)
+        self.assertTrue(np.array_equal(M.TS, [time_a, time_b, time_c]))
 
-        self.assertNotEqual(db.SingleWindow(3, np.arange(1, 21)), np.arange(21, 41))
+        # self.assertNotEqual(db.SingleWindow(3, np.arange(1, 21)), np.arange(21, 41))
 
-        # self.assertEqual(M.TS, [3, 6, 35])
+    def test_empty(self):
+        w_si = si.Window(5, 20, 250)
 
-        # empty window test
         emptyWindows = [db.Window.make_empty(w_si), db.Window.make_empty(w_si)]
 
         result2 = db.combine(*emptyWindows)
