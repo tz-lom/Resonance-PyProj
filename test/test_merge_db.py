@@ -60,7 +60,7 @@ class TestEvents(unittest.TestCase):
     def test_merge(self):
         e_si = si.Event()
 
-        ''' event test '''
+        # event test
         events = [db.Event(e_si, 3, "a"),
                   db.Event(e_si, 5, "b"),
                   db.Event.make_empty(e_si),
@@ -80,39 +80,49 @@ class TestEvents(unittest.TestCase):
         self.assertEqual(result[1], target[1])
         self.assertEqual(result[2], target[2])
 
-        ''' event empty test '''
+        # event empty test
         emptyEvents = [db.Event.make_empty(e_si),
                        db.Event.make_empty(e_si)]
 
-        result2 = db.combine(*emptyEvents)
+        emptyEventsResult = db.combine(*emptyEvents)
 
-        self.assertEqual(result2, db.Event.make_empty(e_si))
+        self.assertEqual(emptyEventsResult, db.Event.make_empty(e_si))
 
-        ''' event empty test 1 '''
+        # event empty test 1
         emptyEvent = [db.Event.make_empty(e_si)]
 
-        result3 = db.combine(*emptyEvent)
+        emptyEventResult = db.combine(*emptyEvent)
 
-        self.assertEqual(result3, db.Event.make_empty(e_si))
+        self.assertEqual(emptyEventResult, db.Event.make_empty(e_si))
 
+    def test_equality(self):
+        e_si = si.Event()
+
+        # wrong event message test
+        self.assertNotEqual(db.Event(e_si, 1, "a"), db.Event(e_si, 2, "WRONG"))
+
+        # wrong event timestamp test
+        self.assertNotEqual(db.Event(e_si, 7, "a"), db.Event(e_si, 77, "a"))
 
 
 class TestWindow(unittest.TestCase):
     def test_merge(self):
+        # window test
+        w_si = si.Window(5, 20, 250)
 
-        #window test
-        w_si = si.Window(5, 20, 300)
-
-        A = db.Window(w_si, 3, np.arange(1, 201))
-        B = db.Window(w_si, 6, np.arange(201, 401))
-        C = db.Window(w_si, 35, np.arange(401, 601))
+        A = db.Window(w_si, 3, np.arange(1, 101))
+        B = db.Window(w_si, 6, np.arange(101, 201))
+        C = db.Window(w_si, 35, np.arange(201, 301))
 
         M = db.combine(A, B, C)
 
-        O = db.Window(w_si, 35, np.arange(1, 601))
+        O = db.Window(w_si, 35, np.arange(1, 301))
 
         self.assertEqual(O, M)
 
+        self.assertNotEqual(db.SingleWindow(3, np.arange(1, 21)), np.arange(21, 41))
+
+        # self.assertEqual(M.TS, [3, 6, 35])
 
         # empty window test
         emptyWindows = [db.Window.make_empty(w_si), db.Window.make_empty(w_si)]
@@ -120,6 +130,4 @@ class TestWindow(unittest.TestCase):
         result2 = db.combine(*emptyWindows)
 
         self.assertEqual(result2, db.Window.make_empty(w_si))
-
-
 

@@ -2,7 +2,6 @@ import numpy as np
 from itertools import filterfalse
 
 
-
 class Base:
     def __new__(self, si, timestamp, *kargs):
         self._si = si
@@ -43,22 +42,25 @@ class Event(Base, np.chararray):
         obj = np.asarray(message, dtype=np.str).view(Event)
 
         if isinstance(ts, float) or isinstance(ts, int):
-            ts = np.asarray([ts], dtype=np.longlong)
+            ts = np.asarray([ts], dtype=np.int64)
 
         Base.__new__(obj, si, ts)
         return obj
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __eq__(self, other):
         if isinstance(other, Event):
             return (self._si == other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
         else:
-            return np.chararray.__eq__(self, other)
+            return np.array_equal(self[0], other)
 
     @staticmethod
     def make_empty(si):
         obj = np.array(np.empty(0), dtype=np.str).view(Event)
 
-        ts = np.array(np.empty(0), dtype=np.longlong)
+        ts = np.array(np.empty(0), dtype=np.int64)
         Base.__new__(obj, si, ts)
         return obj
 
@@ -66,7 +68,7 @@ class Event(Base, np.chararray):
     def combine(*blocks):
         Base.combine(*blocks)
         message = np.concatenate(blocks)
-        if message.size > 1:
+        if len(message) > 1:
             ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
         else:
             ts = np.empty(0)
@@ -82,7 +84,7 @@ class Channels(Base, np.ndarray):
             obj = obj.reshape((int(obj.size / si.channels), si.channels))
 
         if isinstance(ts, int) or isinstance(ts, float):
-            ts = ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9/si.samplingRate
+            ts = ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate
 
         Base.__new__(obj, si, ts)
         return obj
@@ -115,8 +117,7 @@ class SingleWindow(Base, np.ndarray):
     def __new__(cls, ts, data):
         obj = np.asarray(data).view(SingleWindow)
 
-        if isinstance(ts, float) or isinstance(ts, int):
-            ts = np.asarray([ts], dtype=np.longlong)
+        ts = np.array([ts], dtype=np.int64)
 
         Base.__new__(obj, ts, data)
         return obj
@@ -126,22 +127,24 @@ class SingleWindow(Base, np.ndarray):
 
     def __eq__(self, other):
         if isinstance(other, SingleWindow):
-            return np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+            return np.array_equal(self.ts, other.ts) and np.array_equal(self, other)
         else:
-            return np.ndarray.__eq__(self, other)
+            return np.array_equal(self, other)
 
 
 class Window(Base, np.ndarray):
     def __new__(cls, si, ts, data):
 
-        if isinstance(ts, int) or isinstance(ts, float):
-            ts = ts - np.flip(np.arange(0, np.size(data, 0) / si.channels)) * 1E9/si.samplingRate
+        if np.size(data) % (si.channels * si.samples) != 0:
+            raise Exception("Invalid window size (window size must be a multiple of the value channels * samples)")
+
+        ts = np.array([ts], dtype=np.int64)
 
         obj = np.array(SingleWindow(ts, data)).view(Window)
         if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
             obj = obj.reshape((int(obj.size / si.channels), si.channels))
 
-        Base.__new__(obj, si, ts)
+        Base.__new__(obj, si, [])
         return obj
 
     def __ne__(self, other):
@@ -149,23 +152,19 @@ class Window(Base, np.ndarray):
 
     def __eq__(self, other):
         if isinstance(other, Window):
-            #@todo: debug code
-            print(self._ts)
-            print(other._ts)
             return (self._si == other._si) and np.array_equal(self, other)
         else:
-            return np.ndarray.__eq__(self, other)
+            return np.ndarray.array_equal(self, other)
 
     @property
     def TS(self):
-        return self._ts
+        return self
 
     @staticmethod
     def combine(*blocks):
         Base.combine(*blocks)
         data = np.concatenate(blocks)
-        ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
-        return Window(blocks[0].SI, ts, data)
+        return Window(blocks[0].SI, [], data)
 
     @staticmethod
     def make_empty(si):
@@ -181,5 +180,3 @@ def combine(*blocks):
 
 def make_empty(si):
     return si.db_type.make_empty(si)
-
-

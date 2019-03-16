@@ -45,7 +45,7 @@ class Event(Base):
 
 
 class Window(Base):
-    def __init__(self, channels, samplingRate, samples, id=None, name=None):
+    def __init__(self, channels, samples, samplingRate, id=None, name=None):
         Base.__init__(self, id, name)
         self._channels = channels
         self._samples = samples
