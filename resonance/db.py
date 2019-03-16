@@ -3,9 +3,9 @@ from itertools import filterfalse
 
 
 class Base:
-    def __new__(self, si, timestamp, *kargs):
-        self._si = si
-        self._ts = np.asarray(timestamp, dtype=np.int64)
+    def __new__(cls, si, timestamp, *kargs):
+        cls._si = si
+        cls._ts = np.asarray(timestamp, dtype=np.int64)
 
     @property
     def SI(self):
@@ -171,6 +171,13 @@ class Window(Base, np.ndarray):
         obj = np.empty((0, si.channels)).view(Window)
         ts = np.array([], dtype=np.int64)
         Base.__new__(obj, si, ts)
+        return obj
+
+
+class OutputStream(Base):
+    def __new__(cls, si):
+        obj = object.__new__(cls)
+        Base.__new__(obj, si, 0)
         return obj
 
 

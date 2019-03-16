@@ -2,10 +2,10 @@ import resonance.db as db
 
 
 class Base:
-    def __init__(self, id=None, name=None, online=False):
+    def __init__(self, id=None, name=None):
         self._id = id
         self._name = name
-        self.online = online
+        self.online = False
 
     @property
     def id(self):
@@ -64,3 +64,9 @@ class Window(Base):
     def samplingRate(self):
         return self._samplingRate
 
+
+
+class OutputStream(Base):
+    def __init__(self, id, name, source):
+        Base.__init__(self, id, name)
+        self._source = source
