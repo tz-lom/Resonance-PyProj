@@ -65,7 +65,6 @@ class Window(Base):
         return self._samplingRate
 
 
-
 class OutputStream(Base):
     def __init__(self, id, name, source):
         Base.__init__(self, id, name)
