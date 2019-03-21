@@ -1,6 +1,13 @@
 import resonance
 import resonance.db as db
+from resonance.si import Base as StreamInfo
 import resonance.events as events
+from typing import Sequence, Callable, Union
+
+
+code_type = Union[Callable[[], None], str] # @todo: add code object type to this list
+
+
 #
 #  run.offline <- function(inputs, blocks, code, env=new.env()) {
 #
@@ -39,8 +46,7 @@ import resonance.events as events
 #   results
 # }
 #
-
-def offline(input, blocks, code):
+def offline(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: code_type):
 
     def combine_blocks(si):
         data = list(filter(lambda x: x.SI == si, blocks))
@@ -49,19 +55,22 @@ def offline(input, blocks, code):
         else:
             return db.make_empty(si)
 
-    input_list = list(map(combine_blocks, input))
+    input_list = list(map(combine_blocks, stream_info))
     results = {}
 
-    def input(id):
+    def input_handler(id):
         return input_list[id]
 
     def create_output(data, name):
         results[name] = data
 
-    resonance.input = input
+    resonance.input = input_handler
     resonance.createOutput = create_output
 
-    exec(code)
+    if callable(code):
+        code()
+    else:
+        exec(code)
 
     return results
 
@@ -152,11 +161,11 @@ def offline(input, blocks, code):
 #       } else {offline
 #
 
-def online(input, blocks, code):
+def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: code_type):
     outputs = {}
 
     id = 100
-    for si in input:
+    for si in stream_info:
         si.online = True
         if si.id is None:
             si._id = id
@@ -210,7 +219,7 @@ def online(input, blocks, code):
             #       }
             #     })
 
-    events.on_prepare(code, input)
+    events.on_prepare(code, stream_info)
     process_queue()
 
     events.on_start()

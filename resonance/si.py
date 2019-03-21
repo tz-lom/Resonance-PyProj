@@ -35,10 +35,6 @@ class Channels(Base):
         return self._samplingRate
 
 
-def is_channels(x):
-    return isinstance(x, Channels) or isinstance(x.SI, Channels)
-
-
 class Event(Base):
     def __init__(self, id=None, name=None):
         Base.__init__(self, id, name)

@@ -54,8 +54,6 @@ def declare_transformation(operator):
 
 
 class Processor:
-    def __init__(self):
-        pass
 
     def call(self, *inputs):
         outputs_si = self.prepare(*inputs)

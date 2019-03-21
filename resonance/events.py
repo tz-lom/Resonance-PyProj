@@ -1,6 +1,7 @@
 import resonance
 import resonance.internal as internal
 import resonance.db as db
+import resonance.run
 
 
 #   to_restore <- .execution_plan$processingPlanId
@@ -58,7 +59,7 @@ def on_stop():
     pass
 
 
-def on_prepare(code, descriptions):
+def on_prepare(code: resonance.run.code_type, descriptions):
     internal.reset()
     internal.execution_plan.inputs_data = list(map(db.make_empty, descriptions))
     internal.execution_plan.next_stream_id = len(descriptions) + 1
@@ -69,7 +70,9 @@ def on_prepare(code, descriptions):
     resonance.input = input
     resonance.createOutput = resonance.internal.create_output
 
-    exec(code)
+    if callable(code):
+        code()
+    else:
+        exec(code)
 
-    pass
 

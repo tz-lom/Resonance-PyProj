@@ -8,7 +8,7 @@ import numpy as np
 class spatial(Processor):
 
     def prepare(self, input, matrix):
-        if not si.is_channels(input):
+        if not isinstance(input, db.Channels):
             raise Exception
         if input.SI.channels != np.size(matrix, 1):
             raise Exception
