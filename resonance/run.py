@@ -161,7 +161,7 @@ def offline(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: 
 #       } else {offline
 #
 
-def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: code_type):
+def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: code_type, return_blocks:bool = False):
     outputs = {}
 
     id = 100
@@ -232,4 +232,7 @@ def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: c
     events.on_stop()
     process_queue()
 
-    return {name: db.combine(*values) for name, values in outputs.items()}
+    if return_blocks:
+        return outputs
+    else:
+        return {name: db.combine(*values) for name, values in outputs.items()}

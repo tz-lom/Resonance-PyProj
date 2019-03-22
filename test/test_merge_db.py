@@ -8,6 +8,13 @@ import numpy as np
 
 class TestChannels(unittest.TestCase):
 
+    def test_single_channel(self):
+        c_si = si.Channels(1, 20)
+        single = db.Channels(c_si, 1e9, [1, 2, 3])
+
+        self.assertEqual((3, 1), single.shape)
+        self.assertEqual([[1], [2], [3]], single)
+
     def test_equality(self):
         c_si = si.Channels(5, 20)
 

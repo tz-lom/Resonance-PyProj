@@ -65,7 +65,12 @@ class Processor:
 
             global execution_plan
             id = data_streams[0].SI.id
-            input_si = list(map(lambda x: x.SI if isinstance(x, resonance.db.Base) else x, inputs))
+            input_si = list(
+                map(
+                    lambda x: x.SI,
+                    filter(
+                        lambda x: isinstance(x, resonance.db.Base),
+                        inputs)))
 
             # @todo: this could be either "array" or si object
             outputs_si._id = execution_plan.next_stream_id
@@ -74,7 +79,7 @@ class Processor:
 
             execution_plan.plan[id] = ExecutionStep(input_si, outputs_si, self)
 
-            return data_streams
+            return resonance.db.make_empty(outputs_si)
         else:
             if getattr(self, 'offline', None) is None:
                 return self.online(*data_streams)
@@ -242,6 +247,6 @@ class create_output(Processor):
     #
         return self._si
 
-    def online(self, data: resonance.db.Base, _name: str):
+    def online(self, data: resonance.db.Base):
         ret = self._callback(data)
         return ret
