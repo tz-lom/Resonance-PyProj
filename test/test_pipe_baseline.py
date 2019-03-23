@@ -8,17 +8,12 @@ import numpy as np
 
 class TestPipeBaseline(unittest.TestCase):
     def check(self, si, blocks, expected, beginOffset, endOffset):
-#        code = '''
-# from resonance import *
-# inputData = input(0)
-# out = pipe.baseline(inputData, beginOffset, endOffset)
-# createOutput(out, 'out')
-# '''
-        code = "from resonance import *\n"\
-               "inputData = input(0)\n"\
-               "out = pipe.baseline(inputData, %f, %f)\n"\
+
+        code = "from resonance import *"\
+               "inputData = input(0)"\
+               "out = pipe.baseline(inputData, {0}, {1})"\
                "createOutput(out, 'out')"\
-               % (beginOffset, endOffset)
+               .format(beginOffset, endOffset)
 
         online = run.online([si], blocks, code)
         offline = run.offline([si], blocks, code)
@@ -27,9 +22,12 @@ class TestPipeBaseline(unittest.TestCase):
         self.assertEqual(online, offline)
 
     def test_baseline(self):
-        w_si = si.Window(2, 20, 250)
-        data = np.arange(1, 41).reshape((20, 2))
+        channels = 2
+        samples = 20
         time = 3
+
+        w_si = si.Window(channels, samples, 250)
+        data = np.arange(1, 41).reshape((samples, channels))
 
         srcWindow = db.Window(w_si, time, data)
 
@@ -39,13 +37,35 @@ class TestPipeBaseline(unittest.TestCase):
 
         expectedWindow = db.Window(w_si, time, expectedData)
 
-        self.check(w_si, srcWindow, expectedWindow, 1, 20)
-        # win generate
-        # expected gen
-        # check
+        self.check([w_si], srcWindow, expectedWindow, 1, 20)
 
-    def test_baseline_subset(self):
-        pass
+    def test_baseline_channels(self):
+        time = 3
+        samples = 20
+        samplingRate = 250
+
+        # one channel window
+        channels = 1
+        data = np.arange(1, 21).reshape((samples, channels))
+        w_si = si.Window(channels, samples, samplingRate)
+        oneChWindow = db.Window(w_si, time, data)
+
+        expectedData = np.arange(1, 21)
+        expectedWindow = db.Window(w_si, time, expectedData)
+
+        self.check([w_si], oneChWindow, expectedWindow, 1, samples)
+
+        # two channel window
+        channels = 2
+        data = np.arange(1, 41).reshape((samples, channels))
+        w_si = si.Window(channels, samples, samplingRate)
+        twoChWindow = db.Window(w_si, time, data)
+
+        expectedData = np.arange(1, 41)
+        expectedWindow = db.Window(w_si, time, expectedData)
+
+        self.check([w_si], twoChWindow, expectedWindow, 1, samples)
+
         # check 1 and 2 channel window
         # if begin > end ->  error
         # if end < -1 -> end index = last - 1...

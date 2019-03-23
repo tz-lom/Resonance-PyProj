@@ -190,4 +190,4 @@ def combine(*blocks):
 
 
 def make_empty(si):
-    return si.db_type.make_empty(si)
+    return si.db_type.make_empty([si])
