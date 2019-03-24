@@ -2,13 +2,19 @@ import unittest
 import copy
 import resonance
 import resonance.run
+import numpy as np
 
 
 class TestProcessor(unittest.TestCase):
     def assertResults(self, result: dict, expected: dict, msg):
         self.assertEqual(result.keys(), expected.keys(), msg)
         for name in result.keys():
-            self.assertEqual(expected[name], result[name], expected[name], msg)
+            if isinstance(expected[name], resonance.db.Channels):
+                self.assertEqual(expected[name].SI, result[name].SI, msg)
+                self.assertTrue(np.array_equal(expected[name].TS, result[name].TS), msg)
+                self.assertTrue(np.allclose(expected[name], result[name], equal_nan=True), msg)
+            else:
+                self.assertEqual(expected[name], result[name], msg)
 
     def check_processor(self, si, blocks, expected, processor, *arguments):
         def code():
@@ -50,5 +56,5 @@ class TestProcessor(unittest.TestCase):
             self.assertListEqual(blocks, blocks_copy,
                                  "Processor should return new blocks, not modify the input ones")
 
-            self.assertDictEqual(expected, online, "Online did not match the expectations")
-            self.assertDictEqual(online, offline, "Offline not equals online")
+            self.assertResults(expected, online, "Online did not match the expectations")
+            self.assertResults(online, offline, "Offline not equals online")
