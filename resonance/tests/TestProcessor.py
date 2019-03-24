@@ -6,12 +6,13 @@ import numpy as np
 
 
 class TestProcessor(unittest.TestCase):
-    def assertResults(self, result: dict, expected: dict, msg):
+    def assertResults(self, expected: dict, result: dict, msg):
         self.assertEqual(result.keys(), expected.keys(), msg)
         for name in result.keys():
             if isinstance(expected[name], resonance.db.Channels):
-                self.assertEqual(expected[name].SI, result[name].SI, msg)
-                self.assertTrue(np.array_equal(expected[name].TS, result[name].TS), msg)
+                if isinstance(expected[name], resonance.db.Channels):
+                    self.assertEqual(expected[name].SI, result[name].SI, msg)
+                    self.assertTrue(np.array_equal(expected[name].TS, result[name].TS), msg)
                 self.assertTrue(np.allclose(expected[name], result[name], equal_nan=True), msg)
             else:
                 self.assertEqual(expected[name], result[name], msg)

@@ -21,7 +21,7 @@ class TestPipeFilter(TestProcessor):
         data = np.arange(0, 5)
         db = resonance.db.Channels(si, 3e9, data)
         matrix = np.asarray([[1, -0.5, np.pi]], ).reshape((1, 3))
-        expected = np.asarray([data, data*-0.5, data*np.pi]).transpose()
+        expected = np.concatenate((db, db*-0.5, db*np.pi), 1)
         self.check_processor([si], [db], {'out_0': expected}, resonance.pipe.spatial, matrix)
 
 

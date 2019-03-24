@@ -84,7 +84,7 @@ class Channels(Base, np.ndarray):
             obj = obj.reshape((int(obj.size / si.channels), si.channels))
 
         if isinstance(ts, int) or isinstance(ts, float):
-            ts = ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate
+            ts = np.asarray(ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate, dtype=np.int64)
 
         Base.__new__(obj, si, ts)
         return obj

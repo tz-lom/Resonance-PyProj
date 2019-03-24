@@ -19,10 +19,7 @@ class filter(Processor):
 
         self._si = si.Channels(channels=channels.SI.channels, samplingRate=channels.SI.samplingRate)
         self._b, self._a = ba_filter
-        z = signal.lfilter_zi(self._b, self._a)
-        channels = channels.SI.channels
-        self._zi = np.repeat(z, channels).reshape((len(z), channels))
-
+        self._zi = np.zeros((len(self._b)-1, channels.SI.channels), dtype=np.float)
         return self._si
 
     def online(self, channels):

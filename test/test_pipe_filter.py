@@ -131,13 +131,13 @@ class TestPipeFilter(TestProcessor):
 
         si = resonance.si.Channels(channels, self.si.samplingRate)
         data = np.zeros((self.db.shape[0], channels))
-        data[:, 0] = self.db
-        data[:, 1] = self.db
+        data[:, 0] = self.db[:, 0]
+        data[:, 1] = self.db[:, 0]
         data = resonance.db.Channels(si, 1E9, data)
 
         expected = np.zeros_like(data)
-        expected[:, 0] = self.expected
-        expected[:, 1] = self.expected
+        expected[:, 0] = self.expected[:, 0]
+        expected[:, 1] = self.expected[:, 0]
         expected = resonance.db.Channels(si, 1E9, expected)
 
         self.check_processor([si], [data], {'out_0': expected}, resonance.pipe.filter, self.ba)
