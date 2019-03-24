@@ -16,7 +16,14 @@ class Base:
         return self._name
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        if self.__dict__.keys() != other.__dict__.keys():
+            return False
+
+        for key, value in self.__dict__.items():
+            if key not in ['_id', '_name', 'online']:
+                if other.__dict__[key] != value:
+                    return False
+        return True
 
 
 class Channels(Base):
@@ -35,13 +42,10 @@ class Channels(Base):
         return self._samplingRate
 
 
-def is_channels(x):
-    return isinstance(x, Channels) or isinstance(x.SI, Channels)
-
-
 class Event(Base):
     def __init__(self, id=None, name=None):
         Base.__init__(self, id, name)
+        self.db_type = db.Event
 
 
 class Window(Base):
@@ -65,8 +69,8 @@ class Window(Base):
         return self._samplingRate
 
 
-
 class OutputStream(Base):
     def __init__(self, id, name, source):
         Base.__init__(self, id, name)
         self._source = source
+        self.db_type = db.OutputStream

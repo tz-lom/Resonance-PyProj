@@ -10,6 +10,7 @@ setup(
     author_email='nuzhdin.urii@gmail.com',
     description='',
     install_requires=[
-          'numpy',
-      ],
+        'numpy',
+        'scipy'
+    ]
 )
