@@ -1,4 +1,5 @@
 import unittest
+import resonance
 import resonance.pipe as pipe
 import resonance.si as si
 import resonance.db as db
@@ -7,6 +8,15 @@ import numpy as np
 
 
 class TestSimpleTransformation(unittest.TestCase):
+    def setUp(self):
+        self._si = si.Channels(2, 20)
+        self._db = db.Channels(self._si, 300, np.arange(1, 27))
+        self._code = '''
+from resonance import *
+createOutput(input(0), 'foo')
+'''
+
+
     def test_transformation_is_callable(self):
         t = pipe.spatial
         self.assertTrue(callable(t))
@@ -20,29 +30,17 @@ class TestSimpleTransformation(unittest.TestCase):
         self.assertEqual(t.shape, (13, 2))
 
     def test_run_offline(self):
-        code = '''
-from resonance import *
-createOutput(input(0), 'foo')
-'''
-
-        s = si.Channels(2, 20)
-        d = db.Channels(s, 300, np.arange(1, 27))
-
-        results = run.offline([s], [d], code)
-
-        self.assertEqual(results, {'foo': d})
-
+        results = run.offline([self._si], [self._db], self._code)
+        self.assertEqual(results, {'foo': self._db})
 
     def test_run_online(self):
-        code = '''
-from resonance import *
-createOutput(input(0), 'foo')
-        '''
+        results = run.online([self._si], [self._db], self._code)
+        self.assertEqual(results, {'foo': self._db})
 
-        s = si.Channels(2, 20)
-        d = db.Channels(s, 300, np.arange(1, 27))
+    def test_run_function(self):
+        def call():
+            resonance.createOutput(resonance.input(0), 'func')
 
-        results = run.online([s], [d], code)
-
-        self.assertEqual(results, {'foo': d})
+        results = run.offline([self._si], [self._db], call)
+        self.assertEqual(results, {'func': self._db})
 

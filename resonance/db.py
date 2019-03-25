@@ -26,7 +26,7 @@ class Base:
 
     def __array_finalize__(self, obj):
         self._si = getattr(obj, '_si', None)
-        self._ts = None
+        self._ts = getattr(obj, '_ts', None)
 
     @staticmethod
     def combine(*blocks):
@@ -78,13 +78,13 @@ class Event(Base, np.chararray):
 
 class Channels(Base, np.ndarray):
     def __new__(cls, si, ts, data):
-        obj = np.asarray(data).view(Channels)
+        obj = np.array(data, ndmin=2).view(Channels)
 
         if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
             obj = obj.reshape((int(obj.size / si.channels), si.channels))
 
         if isinstance(ts, int) or isinstance(ts, float):
-            ts = ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate
+            ts = np.asarray(ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate, dtype=np.int64)
 
         Base.__new__(obj, si, ts)
         return obj
@@ -96,7 +96,7 @@ class Channels(Base, np.ndarray):
         if isinstance(other, Channels):
             return (self._si == other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
         else:
-            return np.ndarray.__eq__(self, other)
+            return np.array_equal(self, other)
 
     @staticmethod
     def combine(*blocks):
@@ -145,7 +145,7 @@ class Window(Base, np.ndarray):
         ts = np.array(ts, dtype=np.int64)
 
         window = SingleWindow(ts, data)
-        obj = np.ndarray((1), dtype=object).view(Window)
+        obj = np.ndarray((1,), dtype=object).view(Window)
         obj[0] = window
 
         Base.__new__(obj, si, None)
@@ -181,6 +181,12 @@ class Window(Base, np.ndarray):
 class OutputStream(Base):
     def __new__(cls, si):
         obj = object.__new__(cls)
+        Base.__new__(obj, si, None)
+        return obj
+
+    @staticmethod
+    def make_empty(si):
+        obj = np.empty(0, dtype=object).view(Window)
         Base.__new__(obj, si, None)
         return obj
 
