@@ -1,6 +1,7 @@
-from resonance.internal import declare_transformation, Processor
 import resonance.si as si
 import resonance.db as db
+from resonance.internal import declare_transformation, Processor
+import numpy as np
 
 
 @declare_transformation

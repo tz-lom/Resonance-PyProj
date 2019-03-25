@@ -1,10 +1,11 @@
 from resonance.tests.TestProcessor import TestProcessor
 import resonance.pipe.baseline
 import numpy as np
+import unittest
 
 
+@unittest.skip("Not implemented yet")
 class TestPipeBaseline(TestProcessor):
-
     def setUp(self):
         self.time = 3
         self.channels = 2
