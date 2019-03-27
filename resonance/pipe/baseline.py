@@ -2,6 +2,7 @@ import resonance.si as si
 import resonance.db as db
 from resonance.internal import declare_transformation, Processor
 import numpy as np
+import copy
 
 
 @declare_transformation
@@ -25,11 +26,12 @@ class baseline(Processor):
         return self._si
 
     def online(self, input):
-        wndBuffer = input
+        windows = copy.deepcopy(input)
 
-        for channel in wndBuffer:
-            for sample in channel:
-                sample -= channel.average(range(self._beginOffset, self._endOffset))
+        for window in windows:
+            for channel in window:
+                channel -= np.mean(channel[range(self._beginOffset, self._endOffset)])
 
-        return db.Window(self._si, input.TS, wndBuffer)
+        return windows
+        # return db.Window(self._si, input.TS, windows)
 

@@ -4,7 +4,6 @@ import numpy as np
 import unittest
 
 
-@unittest.skip("Not implemented yet")
 class TestPipeBaseline(TestProcessor):
     def setUp(self):
         self.time = 3
@@ -32,6 +31,7 @@ class TestPipeBaseline(TestProcessor):
                              self.first_offset,
                              self.end_offset)
 
+    @unittest.skip("Not implemented yet")
     def test_baseline_window_part_subset(self):
         first_offset = 3
         end_offset = 17
@@ -43,6 +43,7 @@ class TestPipeBaseline(TestProcessor):
                              first_offset,
                              end_offset)
 
+    @unittest.skip("Not implemented yet")
     def test_baseline_one_channel(self):
         channels = 1
 
@@ -62,6 +63,7 @@ class TestPipeBaseline(TestProcessor):
                              self.first_offset,
                              self.end_offset)
 
+    @unittest.skip("Not implemented yet")
     def test_baseline_multiple_channels(self):
         channels = 2
 
