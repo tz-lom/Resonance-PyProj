@@ -1,5 +1,4 @@
 import unittest
-
 import resonance.si as si
 import resonance.db as db
 from resonance.time import timeoption2ts
@@ -136,7 +135,6 @@ class TestWindow(unittest.TestCase):
         self.assertEqual(M[2], data_c)
 
         self.assertTrue(np.array_equal(M.TS, [time_a, time_b, time_c]))
-
         # self.assertNotEqual(db.SingleWindow(3, np.arange(1, 21)), np.arange(21, 41))
 
     def test_empty(self):
@@ -147,4 +145,3 @@ class TestWindow(unittest.TestCase):
         result2 = db.combine(*emptyWindows)
 
         self.assertEqual(result2, db.Window.make_empty(w_si))
-

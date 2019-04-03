@@ -10,8 +10,8 @@ class TestPipeBaseline(TestProcessor):
         self.channels = 2
         self.samples = 20
         self.sampling_rate = 250
-        self.first_offset = 1
-        self.end_offset = 20
+        self.first_offset = 0
+        self.end_offset = 19
 
         self.si = resonance.si.Window(self.channels, self.samples, self.sampling_rate)
 
@@ -33,8 +33,8 @@ class TestPipeBaseline(TestProcessor):
 
     @unittest.skip("Not implemented yet")
     def test_baseline_window_part_subset(self):
-        first_offset = 3
-        end_offset = 17
+        first_offset = 2
+        end_offset = 16
 
         self.check_processor([self.si],
                              [self.src_window],
@@ -85,7 +85,7 @@ class TestPipeBaseline(TestProcessor):
                              self.end_offset)
 
     def test_baseline_parameters(self):
-        first_offset = 2
+        first_offset = 1
         end_offset = 30
 
         with self.assertRaises(Exception):
