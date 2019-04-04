@@ -60,6 +60,17 @@ class TestChannels(unittest.TestCase):
         self.assertEqual(d.TS.shape, (0,))
         self.assertEqual(d.SI, c_si)
 
+    def test_timestamp_subset(self):
+        c_si = si.Channels(1, 20)
+        data = db.Channels(c_si, 2e9, np.arange(0, 25))
+        sub_data = data[1:3, :]
+        expected = db.Channels(c_si, 9e8, np.arange(1, 3))
+        self.assertEqual(expected, sub_data)
+
+        sub_data = data[[2]]
+        expected = db.Channels(c_si, 9e8, [2])
+        self.assertEqual(expected, sub_data)
+
 
 class TestEvents(unittest.TestCase):
 
