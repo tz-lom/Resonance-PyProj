@@ -28,6 +28,17 @@ class Base:
         self._si = getattr(obj, '_si', None)
         self._ts = getattr(obj, '_ts', None)
 
+    def __getitem__(self, item):
+        ret = np.ndarray.__getitem__(self, item)
+        if hasattr(ret, '_ts') and not self._ts is None:
+            if isinstance(item, tuple):
+                ret._ts = self._ts[item[0]]
+            elif isinstance(item, list):
+                ret._ts = self._ts[item]
+            else:
+                ret._ts = self._ts[[item]]
+        return ret
+
     @staticmethod
     def combine(*blocks):
         si = blocks[0].SI
