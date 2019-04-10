@@ -139,13 +139,23 @@ class SingleWindow(np.ndarray):
         else:
             return np.array_equal(self, other)
 
+    def __array_finalize__(self, obj):
+        self._ts = getattr(obj, '_ts', None)
+
+
+class WindowException(Exception):
+    pass
+
 
 class Window(Base, np.ndarray):
     def __new__(cls, si, ts, data):
 
         data = np.asarray(data)
         if len(data.shape) != 2 or np.size(data, 1) != si.channels:
-            data = data.reshape((si.samples, si.channels))
+            try:
+                data = data.reshape((si.samples, si.channels))
+            except ValueError:
+                raise WindowException
 
         if np.size(data, 0) != si.samples:
             raise Exception("Invalid window size")

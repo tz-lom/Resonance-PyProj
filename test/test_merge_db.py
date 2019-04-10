@@ -3,6 +3,7 @@ import resonance.si as si
 import resonance.db as db
 from resonance.time import timeoption2ts
 import numpy as np
+import copy
 
 
 class TestChannels(unittest.TestCase):
@@ -156,3 +157,33 @@ class TestWindow(unittest.TestCase):
         result2 = db.combine(*emptyWindows)
 
         self.assertEqual(result2, db.Window.make_empty(w_si))
+
+    def test_window_timestamp_attribute(self):
+        w_si = si.Window(3, 7, 250)
+
+        time_a = 3
+
+        data_a = np.arange(1, 22).reshape((7, 3))
+
+        A = db.Window(w_si, time_a, data_a)
+        B = copy.deepcopy(A)
+
+        self.assertEqual(A, B)
+
+    def test_window_construct_from_other(self):
+        time = 3
+        channels = 2
+        samples = 20
+        sampling_rate = 250
+
+        w_si = si.Window(channels, samples, sampling_rate)
+
+        time_a = 3
+        data = np.arange(1, 41, dtype=np.float64).reshape(samples, channels)
+        window = db.Window(w_si, time, data)
+
+        try:
+            new_window = db.Window(w_si, time, [window])
+        except db.WindowException:
+            print("Reshape error")
+
