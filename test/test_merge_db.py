@@ -124,6 +124,21 @@ class TestEvents(unittest.TestCase):
 
 
 class TestWindow(unittest.TestCase):
+
+    def test_window_construct_from_other(self):
+        time = 3
+        channels = 2
+        samples = 20
+        sampling_rate = 250
+
+        w_si = si.Window(channels, samples, sampling_rate)
+
+        time = 3
+        data_a = np.arange(1, 41, dtype=np.float64).reshape(samples, channels)
+        data_b = np.arange(42, 82, dtype=np.float64).reshape(samples, channels)
+
+        new_window = db.Window(w_si, time, [data_a])
+
     def test_merge(self):
         # window test
         w_si = si.Window(3, 7, 250)
@@ -169,21 +184,4 @@ class TestWindow(unittest.TestCase):
         B = copy.deepcopy(A)
 
         self.assertEqual(A, B)
-
-    def test_window_construct_from_other(self):
-        time = 3
-        channels = 2
-        samples = 20
-        sampling_rate = 250
-
-        w_si = si.Window(channels, samples, sampling_rate)
-
-        time_a = 3
-        data = np.arange(1, 41, dtype=np.float64).reshape(samples, channels)
-        window = db.Window(w_si, time, data)
-
-        try:
-            new_window = db.Window(w_si, time, [window])
-        except db.WindowException:
-            print("Reshape error")
 

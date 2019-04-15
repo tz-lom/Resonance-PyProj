@@ -31,7 +31,7 @@ class TestPipeBaseline(TestProcessor):
                              self.first_offset,
                              self.end_offset)
 
-    @unittest.skip("Not implemented yet")
+
     def test_baseline_window_part_subset(self):
         first_offset = 2
         end_offset = 16
@@ -43,7 +43,6 @@ class TestPipeBaseline(TestProcessor):
                              first_offset,
                              end_offset)
 
-    @unittest.skip("Not implemented yet")
     def test_baseline_one_channel(self):
         channels = 1
 
@@ -63,7 +62,6 @@ class TestPipeBaseline(TestProcessor):
                              self.first_offset,
                              self.end_offset)
 
-    @unittest.skip("Not implemented yet")
     def test_baseline_multiple_channels(self):
         channels = 2
 
@@ -90,9 +88,4 @@ class TestPipeBaseline(TestProcessor):
 
         with self.assertRaises(Exception):
              resonance.pipe.baseline(self.src_window, first_offset, end_offset)
-
-        # check 1 and 2 channel window
-        # if begin > end ->  error
-        # if end < -1 -> end index = last - 1...
-        # if end < 0 -> end index = last...
 

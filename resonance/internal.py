@@ -183,7 +183,7 @@ class create_output(Processor):
 
         execution_plan.next_output_id += 1
 
-        if isinstance(stream.SI, resonance.si.Channels) or isinstance(stream.SI, resonance.si.Event):
+        if isinstance(stream.SI, resonance.si.Channels) or isinstance(stream.SI, resonance.si.Event) or isinstance(stream.SI, resonance.si.Window):
             self._callback = self._send_np_based
             self._si = resonance.si.OutputStream(id, name, stream.SI)
             add_to_queue('createOutputStream', self._si)
