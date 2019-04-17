@@ -19,8 +19,7 @@ class TestPipeBaseline(TestProcessor):
         self.src_window = resonance.db.Window(self.si, self.time, self.src_data)
 
         self.expected_data = np.arange(1, 41, dtype=np.float64).reshape(self.samples, self.channels)
-        self.expected_data[:, 0] -= np.mean(self.expected_data[:, 0])
-        self.expected_data[:, 1] -= np.mean(self.expected_data[:, 1])
+        self.expected_data = self.expected_data.__sub__(np.mean(self.expected_data, axis=0))
         self.expected_window = resonance.db.Window(self.si, self.time, self.expected_data)
 
     def test_baseline_full_window_subset(self):
@@ -43,6 +42,10 @@ class TestPipeBaseline(TestProcessor):
                              first_offset,
                              end_offset)
 
+<<<<<<< HEAD
+    # @unittest.skip("Not implemented yet")
+=======
+>>>>>>> dd95e55f349869cf640bdc02995bac59c89af753
     def test_baseline_one_channel(self):
         channels = 1
 
@@ -52,7 +55,7 @@ class TestPipeBaseline(TestProcessor):
         src_window = resonance.db.Window(si, self.time, src_data)
 
         expected_data = np.arange(1, 21, dtype=np.float64).reshape(self.samples, channels)
-        expected_data[:, 0] -= np.mean(expected_data[:, 0])
+        expected_data = expected_data.__sub__(np.mean(expected_data, axis=0))
         expected_window = resonance.db.Window(si, self.time, expected_data)
 
         self.check_processor([self.si],
@@ -63,16 +66,15 @@ class TestPipeBaseline(TestProcessor):
                              self.end_offset)
 
     def test_baseline_multiple_channels(self):
-        channels = 2
+        channels = 3
 
         si = resonance.si.Window(channels, self.samples, self.sampling_rate)
 
-        src_data = np.arange(1, 41, dtype=np.float64).reshape((self.samples, channels))
+        src_data = np.arange(1, 61, dtype=np.float64).reshape((self.samples, channels))
         src_window = resonance.db.Window(si, self.time, src_data)
 
-        expected_data = np.arange(1, 41, dtype=np.float64).reshape(self.samples, channels)
-        expected_data[:, 0] -= np.mean(expected_data[:, 0])
-        expected_data[:, 1] -= np.mean(expected_data[:, 1])
+        expected_data = np.arange(1, 61, dtype=np.float64).reshape(self.samples, channels)
+        expected_data = expected_data.__sub__(np.mean(expected_data, axis=0))
         expected_window = resonance.db.Window(si, self.time, expected_data)
 
         self.check_processor([self.si],

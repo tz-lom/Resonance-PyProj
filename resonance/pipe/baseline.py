@@ -8,27 +8,28 @@ import copy
 @declare_transformation
 class baseline(Processor):
 
-    def prepare(self, input, begin_offset, end_offset):
-        if not isinstance(input, db.Window):
+    def prepare(self, input_stream, begin_offset, end_offset):
+        if not isinstance(input_stream, db.Window):
             raise Exception("BaseLine processor: received data block is not a window.")
 
-        if input.SI.samples < begin_offset:
+        if input_stream.SI.samples < begin_offset:
             raise Exception("BaseLine processor: offset value should not exceed the length of the window.")
 
-        if (input.SI.samples < end_offset) or (input.SI.samples < begin_offset):
+        if (input_stream.SI.samples < end_offset) or (begin_offset < -input_stream.SI.samples):
             raise Exception("BaseLine processor: the number of samples for averaging should not exceed the length of "
                             "the window.")
 
-        self._si = si.Window(channels=input.SI.channels, samples=input.SI.samples, samplingRate=input.SI.samplingRate)
+        self._si = si.Window(channels=input_stream.SI.channels, samples=input_stream.SI.samples, samplingRate=input_stream.SI.samplingRate)
         self._begin_offset = begin_offset
         self._end_offset = end_offset
-        self._averaging_window = slice(self._begin_offset, self._end_offset)
+        self._averaging_window = slice(self._begin_offset, self._end_offset+1)
 
         return self._si
 
-    def online(self, input):
-        windows = copy.deepcopy(input)
+    def online(self, input_stream):
+        windows = copy.deepcopy(input_stream)
         for window in windows:
-            window -= np.mean(window[self._averaging_window, :])
+            window -= np.mean(window[self._averaging_window, :], axis=0)
 
-        return db.Window(self._si, input.TS, windows)
+        return db.Window(self._si, input_stream.TS, windows)
+
