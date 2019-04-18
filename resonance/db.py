@@ -145,37 +145,15 @@ class SingleWindow(np.ndarray):
 
 class Window(Base, np.ndarray):
     def __new__(cls, si, ts, data):
-        data = np.asarray(data)
-<<<<<<< HEAD
+
         if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(data[0], SingleWindow):
             obj = np.ndarray((1,), dtype=object).view(Window)
             obj[0] = data.view(Window)
 
             Base.__new__(obj, si, None)
             return obj
-
         else:
-            if isinstance(ts, int) or isinstance(ts, float):
-                ts = ts - np.flip(np.arange(0, np.size(data, 0))) * 1E9 / si.samplingRate
-
-            if len(data.shape) != 2 or np.size(data, 1) != si.channels:
-                try:
-                    data = data.reshape((si.samples, si.channels))
-                except ValueError:
-                    raise Exception("Reshape error")
-
-            if np.size(data, 0) != si.samples:
-                raise Exception("Invalid window size")
-=======
-        if isinstance(data, np.ndarray) and len(data) > 0:
-            if isinstance(data[0], SingleWindow):
-                print("array of single windows: ", data)
-                data = np.concatenate(data)
-            ''' elif isinstance(data[0], np.ndarray):
-                print("array of arrays: ", data)
-            else:
-                raise Exception("Invalid container type") '''
-
+            data = np.asarray(data)
             if len(data.shape) != 2 or np.size(data, 1) != si.channels:
                 try:
                     data = data.reshape((si.samples, si.channels))
@@ -187,7 +165,6 @@ class Window(Base, np.ndarray):
 
             if not isinstance(ts, np.ndarray):
                 ts = ts - np.flip(np.arange(0, np.size(data, 0))) * 1E9 / si.samplingRate
->>>>>>> dd95e55f349869cf640bdc02995bac59c89af753
 
             ts = np.array(ts, dtype=np.int64)
 
@@ -197,11 +174,6 @@ class Window(Base, np.ndarray):
 
             Base.__new__(obj, si, None)
             return obj
-<<<<<<< HEAD
-=======
-        else:
-            raise Exception("Invalid data")
->>>>>>> dd95e55f349869cf640bdc02995bac59c89af753
 
     def __ne__(self, other):
         return not self.__eq__(other)

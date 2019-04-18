@@ -31,5 +31,7 @@ class baseline(Processor):
         for window in windows:
             window -= np.mean(window[self._averaging_window, :], axis=0)
 
-        return db.Window(self._si, input_stream.TS, windows)
+        windows._si = self._si
+        return windows
+        # return db.Window(self._si, input_stream.TS, windows)
 

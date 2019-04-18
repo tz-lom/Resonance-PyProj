@@ -30,22 +30,23 @@ class TestPipeBaseline(TestProcessor):
                              self.first_offset,
                              self.end_offset)
 
-
     def test_baseline_window_part_subset(self):
         first_offset = 2
         end_offset = 16
 
+        averaging_window = slice(first_offset, end_offset+1)
+
+        expected_data = self.expected_data
+        expected_data = expected_data.__sub__(np.mean(expected_data[averaging_window, :], axis=0))
+        expected_window = resonance.db.Window(self.si, self.time, expected_data)
+
         self.check_processor([self.si],
                              [self.src_window],
-                             {'out_0': self.expected_window},
+                             {'out_0': expected_window},
                              resonance.pipe.baseline,
                              first_offset,
                              end_offset)
 
-<<<<<<< HEAD
-    # @unittest.skip("Not implemented yet")
-=======
->>>>>>> dd95e55f349869cf640bdc02995bac59c89af753
     def test_baseline_one_channel(self):
         channels = 1
 
@@ -58,7 +59,7 @@ class TestPipeBaseline(TestProcessor):
         expected_data = expected_data.__sub__(np.mean(expected_data, axis=0))
         expected_window = resonance.db.Window(si, self.time, expected_data)
 
-        self.check_processor([self.si],
+        self.check_processor([si],
                              [src_window],
                              {'out_0': expected_window},
                              resonance.pipe.baseline,
@@ -77,7 +78,7 @@ class TestPipeBaseline(TestProcessor):
         expected_data = expected_data.__sub__(np.mean(expected_data, axis=0))
         expected_window = resonance.db.Window(si, self.time, expected_data)
 
-        self.check_processor([self.si],
+        self.check_processor([si],
                              [src_window],
                              {'out_0': expected_window},
                              resonance.pipe.baseline,
