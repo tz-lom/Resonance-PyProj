@@ -20,9 +20,7 @@ class baseline(Processor):
                             "the window.")
 
         self._si = si.Window(channels=input_stream.SI.channels, samples=input_stream.SI.samples, samplingRate=input_stream.SI.samplingRate)
-        self._begin_offset = begin_offset
-        self._end_offset = end_offset
-        self._averaging_window = slice(self._begin_offset, self._end_offset+1)
+        self._averaging_window = slice(begin_offset, end_offset+1)
 
         return self._si
 
@@ -31,7 +29,7 @@ class baseline(Processor):
         for window in windows:
             window -= np.mean(window[self._averaging_window, :], axis=0)
 
-        windows._si = self._si
+        windows.SI = self._si
         return windows
-        # return db.Window(self._si, input_stream.TS, windows)
+        # return db.Window(self._si, None, windows)
 

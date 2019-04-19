@@ -147,9 +147,7 @@ class Window(Base, np.ndarray):
     def __new__(cls, si, ts, data):
 
         if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(data[0], SingleWindow):
-            obj = np.ndarray((1,), dtype=object).view(Window)
-            obj[0] = data.view(Window)
-
+            obj = data.view(Window)
             Base.__new__(obj, si, None)
             return obj
         else:
