@@ -1,9 +1,9 @@
 import unittest
-
 import resonance.si as si
 import resonance.db as db
 from resonance.time import timeoption2ts
 import numpy as np
+import copy
 
 
 class TestChannels(unittest.TestCase):
@@ -124,6 +124,21 @@ class TestEvents(unittest.TestCase):
 
 
 class TestWindow(unittest.TestCase):
+
+    def test_window_construct_from_other(self):
+        time = 3
+        channels = 2
+        samples = 20
+        sampling_rate = 250
+
+        w_si = si.Window(channels, samples, sampling_rate)
+
+        time = 3
+        data_a = np.arange(1, 41, dtype=np.float64).reshape(samples, channels)
+        data_b = np.arange(42, 82, dtype=np.float64).reshape(samples, channels)
+
+        new_window = db.Window(w_si, time, [data_a])
+
     def test_merge(self):
         # window test
         w_si = si.Window(3, 7, 250)
@@ -147,7 +162,6 @@ class TestWindow(unittest.TestCase):
         self.assertEqual(M[2], data_c)
 
         self.assertTrue(np.array_equal(M.TS, [time_a, time_b, time_c]))
-
         # self.assertNotEqual(db.SingleWindow(3, np.arange(1, 21)), np.arange(21, 41))
 
     def test_empty(self):
@@ -158,4 +172,16 @@ class TestWindow(unittest.TestCase):
         result2 = db.combine(*emptyWindows)
 
         self.assertEqual(result2, db.Window.make_empty(w_si))
+
+    def test_window_timestamp_attribute(self):
+        w_si = si.Window(3, 7, 250)
+
+        time_a = 3
+
+        data_a = np.arange(1, 22).reshape((7, 3))
+
+        A = db.Window(w_si, time_a, data_a)
+        B = copy.deepcopy(A)
+
+        self.assertEqual(A, B)
 
