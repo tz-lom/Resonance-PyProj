@@ -11,6 +11,9 @@ import resonance.db as db
 
 test_report = []
 
+si_channels = None
+si_events = None
+
 
 def on_prepare(code, inputs):
     global test_report
@@ -20,18 +23,23 @@ def on_prepare(code, inputs):
 
     test_report.append(("onPrepare", (inputs, code)))
 
-    resonate.add_to_queue("createOutputStream", si.OutputStream(
+    global si_channels
+    si_channels = si.OutputStream(
         id=1,
         name="channels-out",
         source=si.Channels(
             channels=3,
             samplingRate=21.0
         )
-    ))
-    resonate.add_to_queue("createOutputStream", si.OutputStream(
+    )
+    global si_events
+    si_events = si.OutputStream(
         id=2,
         name="event-out", source=si.Event()
-    ))
+    )
+
+    resonate.add_to_queue("createOutputStream", si_channels)
+    resonate.add_to_queue("createOutputStream", si_events)
 
 
 def on_start():
@@ -44,10 +52,10 @@ def on_data_block(block):
     if block.SI.id == 1:
         data = block
         data[:, 1] = -data[:, 1]
-        resonate.add_to_queue("sendBlockToStream", (1, data))
+        resonate.add_to_queue("sendBlockToStream", (si_channels, data))
 
     if block.SI.id == 2:
-        resonate.add_to_queue("sendBlockToStream", (2, block[0]+" out"))
+        resonate.add_to_queue("sendBlockToStream", (si_events, block[0]+" out"))
 
 
 def on_stop():
@@ -150,6 +158,7 @@ def on_stop():
         # raise Exception("Test didn't pass")
 
     print("passed")
+
 
 def trace(what):
     print(type(what))

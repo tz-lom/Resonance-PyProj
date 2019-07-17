@@ -1,8 +1,6 @@
 import resonance
 import resonance.internal as internal
 import resonance.db as db
-import resonance.run
-
 
 #   to_restore <- .execution_plan$processingPlanId
 #   execId <- findInExectionPlan(SI(block))
@@ -32,11 +30,7 @@ import resonance.run
 #   }
 #
 def on_data_block(block):
-
     plan = internal.execution_plan.plan.get(block.SI.id)
-
-    print(internal.execution_plan)
-
     if plan is None:
         return
 
@@ -63,7 +57,7 @@ def on_stop():
     pass
 
 
-def on_prepare(code: resonance.run.code_type, descriptions):
+def on_prepare(code, descriptions):
     internal.reset()
     internal.execution_plan.inputs_data = list(map(db.make_empty, descriptions))
     internal.execution_plan.next_stream_id = len(descriptions) + 1
@@ -78,5 +72,4 @@ def on_prepare(code: resonance.run.code_type, descriptions):
         code()
     else:
         exec(code)
-
 
