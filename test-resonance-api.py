@@ -11,6 +11,7 @@ import resonance.db as db
 
 test_report = []
 
+
 def on_prepare(code, inputs):
     global test_report
     if len(test_report) != 0:
@@ -19,17 +20,18 @@ def on_prepare(code, inputs):
 
     test_report.append(("onPrepare", (inputs, code)))
 
-    resonate.add_to_queue("createOutputStream", dict(
+    resonate.add_to_queue("createOutputStream", si.OutputStream(
         id=1,
-        type="channels",
         name="channels-out",
-        channels=3,
-        samplingRate=21.0))
-    resonate.add_to_queue("createOutputStream", dict(
-            id=2,
-            type="event",
-            name="event-out"
-        ))
+        source=si.Channels(
+            channels=3,
+            samplingRate=21.0
+        )
+    ))
+    resonate.add_to_queue("createOutputStream", si.OutputStream(
+        id=2,
+        name="event-out", source=si.Event()
+    ))
 
 
 def on_start():
@@ -49,7 +51,7 @@ def on_data_block(block):
 
 
 def on_stop():
-    print "Stops"
+    print("Stops")
 
     test_report.append(('onStop'))
 
@@ -141,17 +143,17 @@ def on_stop():
     ]
 
     if expected_report != test_report:
-        print "failed"
-        print test_report.__repr__()
-        print "but"
-        print expected_report.__repr__()
-        #raise Exception("Test didn't pass")
+        print("failed")
+        print(test_report.__repr__())
+        print("but")
+        print(expected_report.__repr__())
+        # raise Exception("Test didn't pass")
 
-    print "passed"
+    print("passed")
 
 def trace(what):
-    print type(what)
-    print what
+    print(type(what))
+    print(what)
 
 
 resonate.register_callbacks(

@@ -32,7 +32,11 @@ import resonance.run
 #   }
 #
 def on_data_block(block):
+
     plan = internal.execution_plan.plan.get(block.SI.id)
+
+    print(internal.execution_plan)
+
     if plan is None:
         return
 
