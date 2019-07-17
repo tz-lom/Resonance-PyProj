@@ -41,6 +41,14 @@ class Channels(Base):
     def samplingRate(self):
         return self._samplingRate
 
+    def __repr__(self):
+        return "SI.Channels channels={}, samplingRate={}, id={}, name={}, online={}".format(
+            self.channels,
+            self.samplingRate,
+            self.id,
+            self.name,
+            self.online)
+
 
 class Event(Base):
     def __init__(self, id=None, name=None):

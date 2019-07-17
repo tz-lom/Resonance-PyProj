@@ -5,7 +5,7 @@ import resonance.events as events
 from typing import Sequence, Callable, Union
 
 
-code_type = Union[Callable[[], None], str] # @todo: add code object type to this list
+code_type = Union[Callable[[], None], str]  # @todo: add code object type to this list
 
 
 #

@@ -11,12 +11,20 @@ class ExecutionPlan:
         self.next_output_id = 1
         self.next_stream_id = 1
 
+    def __repr__(self):
+        return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}"\
+            .format(self.plan, self.inputs_data, self.next_output_id, self.next_stream_id)
+
 
 class ExecutionStep:
     def __init__(self, inputs, outputs, call):
         self.inputs = inputs
         self.outputs = outputs
         self.call = call
+
+    def __repr__(self):
+        return "ExecutionStep\ninputs={}\noutputs={}\ncall={}"\
+            .format(self.inputs, self.outputs, self.call)
 
 
 execution_plan = ExecutionPlan()
