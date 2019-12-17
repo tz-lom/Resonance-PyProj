@@ -161,14 +161,14 @@ def offline(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: 
 #       } else {offline
 #
 
-def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: code_type, return_blocks:bool = False):
+def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: code_type, return_blocks: bool = False):
     outputs = {}
 
     id = 100
-    for si in stream_info:
-        si.online = True
-        if si.id is None:
-            si._id = id
+    for i_si in stream_info:
+        i_si.online = True
+        if i_si.id is None:
+            i_si._id = id
             id += 1
 
     def process_queue():

@@ -48,10 +48,11 @@ class Base:
 
 class Event(Base, np.chararray):
     def __new__(cls, si, ts, message):
-        if isinstance(message, str):
-            message = [message]
-
-        obj = np.asarray(message, dtype=np.str).view(Event)
+        if isinstance(message, np.ndarray):
+            obj = np.array(message, dtype=np.object).view(Event)
+        else:
+            obj = np.empty(1, dtype=np.object).view(Event)
+            obj[0] = message
 
         if isinstance(ts, float) or isinstance(ts, int):
             ts = np.asarray([ts], dtype=np.int64)
@@ -70,7 +71,7 @@ class Event(Base, np.chararray):
 
     @staticmethod
     def make_empty(si):
-        obj = np.empty(0, dtype=np.str).view(Event)
+        obj = np.empty(0, dtype=np.object).view(Event)
         ts = np.empty(0, dtype=np.int64)
         Base.__new__(obj, si, ts)
         return obj
