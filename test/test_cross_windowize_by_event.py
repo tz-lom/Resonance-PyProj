@@ -1,12 +1,13 @@
 from resonance.tests.TestProcessor import TestProcessor
 import resonance.si as si
 import resonance.db as db
-import resonance.cross_windowize_by_events
+import resonance.cross.windowize_by_events
 import numpy as np
 import unittest
 
 
 class TestCrossWindowizeByEvent(TestProcessor):
+
     def test_cross_empty(self):
         window_size = 11
         shift = 0
@@ -25,7 +26,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
         self.check_processor(streams,
                              [src_block],
                              {'out_0': [expected_block]},
-                             resonance.cross_windowize_by_events,
+                             resonance.cross.windowize_by_events,
                              window_size,
                              shift,
                              drop_late_events,
@@ -43,16 +44,16 @@ class TestCrossWindowizeByEvent(TestProcessor):
         streams = [c_si, e_si]
         src_blocks = [db.Channels(c_si, 201, 1),
                       db.Channels(c_si, 225, np.arange(2, 26)),
-                      db.Event(e_si, 202, True),  # TO-DO: need to fix events generation
+                      db.Event(e_si, 202, True),
                       db.Event(e_si, 301, False)]
 
         w_si = si.Window(1, 11, 100)
-        expected_block = [db.combine(db.Channels(w_si, 212, np.arange(2, 13)))]
+        expected_block = [db.Channels.combine(db.Window(w_si, 212, np.arange(2, 13)))]
 
         self.check_processor(streams,
                              src_blocks,
                              {'out_0': expected_block},
-                             resonance.cross_windowize_by_events,
+                             resonance.cross.windowize_by_events,
                              window_size,
                              shift,
                              drop_late_events,
