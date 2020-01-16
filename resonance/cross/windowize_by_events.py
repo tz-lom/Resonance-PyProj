@@ -33,46 +33,18 @@ class windowize_by_events(Processor):
         self._window_size = None
         self._shift = None
 
-###########################################################################################
-    # May be it's a useless buns: BEGIN
-###########################################################################################
-
-    def time_interval(self, x, time):
-
-        if time[[1]] > x:
-            return 0
-
-        if time[[len(time.size)]] < x:
-            return np.inf
-
-        low = 1
-        high = len(time)
-
-        while True:
-            if (high - low) <= 1:
-                return low
-
-            boundary = math.ceil((high + low) / 2)
-            if x > time[[boundary]]:
-                low = boundary
-            else:
-                high = boundary
-
-###########################################################################################
-    # May be it's a useless buns: END
-###########################################################################################
-
     def prepare(self, input_stream, events, window_size, shift=0, drop_late_events=True, late_time=10):
         if not isinstance(input_stream, db.Channels):
             raise Exception("windowize_by_events processor: data stream must be Channels.")
 
-        self._signal = np_rb.RingBuffer(input_stream.SI.channels)
+        if not isinstance(events, db.Event):
+            raise Exception("windowize_by_events processor: received events type is not a list object.")
+
         self._pointer = 0
-        self._times = np.zeros(self._signal.maxlen)
         self._lastTS = None
         self._lastSample = 0
-        self._grabSampleQueue = []
-        self._windowSelector = np.arange(1, window_size)
+        self._grabSampleQueue = np.empty(1)
+        self._windowSelector = np.arange(0, window_size-1)
         self._samplingRate = input_stream.SI.samplingRate
         self._window_size = window_size
         self._shift = shift
@@ -81,37 +53,43 @@ class windowize_by_events(Processor):
             self._shiftBufferTo = math.ceil(late_time*input_stream.SI.samplingRate)
             self._maxBufferSize = self._shiftBufferTo*2
         else:
-            self._maxBufferSize = None
+            self._maxBufferSize = math.inf
 
-        self._si = si.Window(input_stream.SI.channels, window_size, input_stream.SI.samplingRate)
+        # if input_stream.SI.channels > 1:
+        self._signal = np_rb.RingBuffer(capacity=self._maxBufferSize, dtype=(float, input_stream.SI.channels))
+        # elif input_stream.SI.channels == 1:
+        #     self._signal = np_rb.RingBuffer(capacity=self._maxBufferSize, dtype=float)
+        # else:
+        #     raise Exception("windowize_by_events processor: invalid channels count.")
+
+        self._times = np_rb.RingBuffer(self._maxBufferSize)
+
+        self._si = si.Window(input_stream.SI.channels, self._window_size, input_stream.SI.samplingRate)
         return self._si
 
     def online(self, input_stream, events):
-        if not isinstance(input_stream, db.Channels):
-            raise Exception("windowize_by_events processor: received stream type is not a window.")
-
-        if not isinstance(events, db.Event):
-            raise Exception("windowize_by_events processor: received events type is not a list object.")
-
         # @todo: windowize_by_events processor - implement work with a ring buffer !!!
         # combine signal
-        # if input_stream.shape[1] > 0:
-        #     if input_stream.shape[1]+self._pointer >= self._signal.maxlen:
-        #         tmp = np_rb.RingBuffer(input_stream.SI.channels)
+        self._signal.extend(input_stream)
+        self._times.extend(events)
 
         # combine events
         if len(events) > 0:
             self._grabSampleQueue.append(events)
 
-        result = []
+        result = np.zeros((0, self._si.channels))
 
         while len(self._grabSampleQueue) > 0:
-            gs = self._grabSampleQueue.TS
+            gs = self._grabSampleQueue[0]
 
-            moar = self.time_interval(gs, self._times)
+            moar = self._times.__array__().searchsorted(gs)
+
+            if moar == np.nan:
+                raise Exception("windowize_by_events processor: event timestamp has not found in data.")
+                #  break
 
             if (moar > 0) and (moar < len(self._times)):
-                pos = moar[1] + 1 + self._shift
+                pos = moar[0] + 1 + self._shift
 
                 if pos < 1:
                     # early event, drop it
@@ -120,8 +98,7 @@ class windowize_by_events(Processor):
 
                 if self._pointer >= (pos + self._window_size):
                     # get window and move on
-                    wnd = self._signal[pos + self._windowSelector, ]
-                    wnd.TS(self._times[pos + self._windowSelector])
+                    wnd = db.Window(self._si, self._times[pos + self._windowSelector], self._signal[pos + self._windowSelector, ])
                     del self._grabSampleQueue[-1]
                     result.append([wnd])
                     continue
@@ -131,6 +108,8 @@ class windowize_by_events(Processor):
             else:
                 break  # waiting for samples
 
-        return result
-
+        if np.size(result, 0) > 0:
+            return db.Window(self._si, None, result)
+        else:
+            return db.Window.make_empty(self._si)
 
