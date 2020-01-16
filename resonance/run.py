@@ -176,7 +176,7 @@ def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: c
         if len(queue) > 0:
             for cmd, data in queue:
                 if cmd == 'createOutputStream':
-                    outputs[data.name] = [db.make_empty(data._source)]
+                    outputs[data.name] = []
                     pass
                 if cmd == 'sendBlockToStream':
                     si, block = data

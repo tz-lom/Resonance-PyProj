@@ -19,13 +19,13 @@ class TestPipeBaseline(TestProcessor):
         self.src_window = resonance.db.Window(self.si, self.time, self.src_data)
 
         self.expected_data = np.arange(1, 41, dtype=np.float64).reshape(self.samples, self.channels)
-        self.expected_data = self.expected_data.__sub__(np.mean(self.expected_data, axis=0))
+        self.expected_data = self.expected_data - np.mean(self.expected_data, axis=0)
         self.expected_window = resonance.db.Window(self.si, self.time, self.expected_data)
 
     def test_baseline_full_window_subset(self):
         self.check_processor([self.si],
                              [self.src_window],
-                             {'out_0': self.expected_window},
+                             {'out_0': [self.expected_window]},
                              resonance.pipe.baseline,
                              self.first_offset,
                              self.end_offset)
@@ -42,7 +42,7 @@ class TestPipeBaseline(TestProcessor):
 
         self.check_processor([self.si],
                              [self.src_window],
-                             {'out_0': expected_window},
+                             {'out_0': [expected_window]},
                              resonance.pipe.baseline,
                              first_offset,
                              end_offset)
@@ -61,7 +61,7 @@ class TestPipeBaseline(TestProcessor):
 
         self.check_processor([si],
                              [src_window],
-                             {'out_0': expected_window},
+                             {'out_0': [expected_window]},
                              resonance.pipe.baseline,
                              self.first_offset,
                              self.end_offset)
@@ -80,7 +80,7 @@ class TestPipeBaseline(TestProcessor):
 
         self.check_processor([si],
                              [src_window],
-                             {'out_0': expected_window},
+                             {'out_0': [expected_window]},
                              resonance.pipe.baseline,
                              self.first_offset,
                              self.end_offset)
@@ -90,5 +90,5 @@ class TestPipeBaseline(TestProcessor):
         end_offset = 30
 
         with self.assertRaises(Exception):
-             resonance.pipe.baseline(self.src_window, first_offset, end_offset)
+            resonance.pipe.baseline(self.src_window, first_offset, end_offset)
 
