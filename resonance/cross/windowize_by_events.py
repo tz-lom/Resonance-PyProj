@@ -40,10 +40,13 @@ class windowize_by_events(Processor):
         if not isinstance(events, db.Event):
             raise Exception("windowize_by_events processor: received events type is not a list object.")
 
+        if input_stream.SI.channels <= 0:
+            raise Exception("windowize_by_events processor: invalid channels count.")
+
         self._pointer = 0
         self._lastTS = None
         self._lastSample = 0
-        self._grabSampleQueue = np.empty(1)
+        self._grabSampleQueue = np.zeros(0)
         self._windowSelector = np.arange(0, window_size-1)
         self._samplingRate = input_stream.SI.samplingRate
         self._window_size = window_size
@@ -55,16 +58,12 @@ class windowize_by_events(Processor):
         else:
             self._maxBufferSize = math.inf
 
-        # if input_stream.SI.channels > 1:
-        self._signal = np_rb.RingBuffer(capacity=self._maxBufferSize, dtype=(float, input_stream.SI.channels))
-        # elif input_stream.SI.channels == 1:
-        #     self._signal = np_rb.RingBuffer(capacity=self._maxBufferSize, dtype=float)
-        # else:
-        #     raise Exception("windowize_by_events processor: invalid channels count.")
+        self._signal = np_rb.RingBuffer(capacity=self._maxBufferSize, dtype=(float, (input_stream.SI.channels,)))
 
-        self._times = np_rb.RingBuffer(self._maxBufferSize)
+        self._times = np_rb.RingBuffer(self._maxBufferSize, dtype=np.int64)
 
         self._si = si.Window(input_stream.SI.channels, self._window_size, input_stream.SI.samplingRate)
+
         return self._si
 
     def online(self, input_stream, events):
@@ -75,7 +74,7 @@ class windowize_by_events(Processor):
 
         # combine events
         if len(events) > 0:
-            self._grabSampleQueue.append(events)
+            np.append(self._grabSampleQueue, events)
 
         result = np.zeros((0, self._si.channels))
 
