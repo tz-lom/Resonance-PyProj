@@ -6,16 +6,43 @@ import numpy as np
 
 
 class TestProcessor(unittest.TestCase):
-    def assertResults(self, expected: dict, result: dict, msg):
-        self.assertEqual(result.keys(), expected.keys(), msg)
+    def __assertBlockEquals(self, expected_block, result_block, msg, name):
+        self.assertIsInstance(expected_block, resonance.db.Base,
+                              '{}: Type of expected {} should be inherited from resonance.db.Base'.format(
+                                  msg, name))
+        self.assertEqual(type(expected_block), type(result_block),
+                         '{}: Different block type for {}'.format(msg, name))
+        self.assertEqual(expected_block.SI, result_block.SI,
+                         '{}: Different types of {}'.format(msg, name))
+        self.assertTrue(np.array_equal(expected_block.TS, result_block.TS),
+                        '{}: Different timestamps of {}'.format(msg, name))
+        self.assertEqual(expected_block, result_block,
+                         '{}: Different data in {}'.format(msg, name))
+
+    def __assertResults(self, expected: dict, result: dict, msg, channel_comparison):
+        self.assertEqual(expected.keys(), result.keys(), '{}: Different number of output channels'.format(msg))
         for name in result.keys():
-            if isinstance(expected[name], resonance.db.Channels):
-                if isinstance(expected[name], resonance.db.Channels):
-                    self.assertEqual(expected[name].SI, result[name].SI, msg)
-                    self.assertTrue(np.array_equal(expected[name].TS, result[name].TS), msg)
-                self.assertTrue(np.allclose(expected[name], result[name], equal_nan=True), msg)
-            else:
-                self.assertEqual(expected[name], result[name], msg)
+            expected_channel = expected[name]
+            result_channel = result[name]
+            channel_comparison(expected_channel, result_channel, name)
+
+    def __assertResultsOnline(self, expected: dict, results: dict, msg):
+        def channel_comparison(expected_channel, result_channel, name):
+            self.assertEqual(len(expected_channel), len(result_channel),
+                             '{}: Different number of blocks in channel {}'.format(msg, name))
+            for i in range(0, len(expected_channel)):
+                expected_block = expected_channel[i]
+                result_block = result_channel[i]
+                block_name = 'block #{} channel {}'.format(i, name)
+                self.__assertBlockEquals(expected_block, result_block, msg, block_name)
+        self.__assertResults(expected, results, msg, channel_comparison)
+
+    def __assertResultsOffline(self, expected: dict, results: dict, msg):
+        def channel_comparison(expected_channel, result_channel, name):
+            channel_name = 'channel {}'.format(name)
+            self.__assertBlockEquals(expected_channel, result_channel, msg, channel_name)
+        self.__assertResults(expected, results, msg, channel_comparison)
+
 
     def check_processor(self, si, blocks, expected, processor, *arguments):
         def code():
@@ -23,7 +50,8 @@ class TestProcessor(unittest.TestCase):
             args = inputs + list(arguments)
             outputs = processor(*args)
             if isinstance(outputs, list):
-                [resonance.createOutput(out, 'out_{}'.format(idx)) for idx, out in enumerate(outputs)]
+                for idx, out in enumerate(outputs):
+                    resonance.createOutput(out, 'out_{}'.format(idx))
             else:
                 resonance.createOutput(outputs, 'out_0')
 
@@ -53,9 +81,12 @@ class TestProcessor(unittest.TestCase):
             self.assertListEqual(blocks, blocks_copy,
                                  "Processor should return new blocks, not modify the input ones")
 
-            online = resonance.run.online(si, blocks_copy, code)
+            online = resonance.run.online(si, blocks_copy, code, return_blocks=True)
             self.assertListEqual(blocks, blocks_copy,
                                  "Processor should return new blocks, not modify the input ones")
 
-            self.assertResults(expected, online, "Online did not match the expectations")
-            self.assertResults(online, offline, "Offline not equals online")
+            self.__assertResultsOnline(expected, online, "Online did not match the expectations")
+
+            online_merged = {name: resonance.db.combine(*values) for name, values in online.items()}
+
+            self.__assertResultsOffline(online_merged, offline, "Offline not equals online")
