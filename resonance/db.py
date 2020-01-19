@@ -33,10 +33,8 @@ class Base:
         if hasattr(ret, '_ts') and not self._ts is None:
             if isinstance(item, tuple):
                 ret._ts = self._ts[item[0]]
-            elif isinstance(item, list):
+            elif isinstance(item, list) or isinstance(item, slice):
                 ret._ts = self._ts[item]
-            else:
-                ret._ts = self._ts[[item]]
         return ret
 
     @staticmethod

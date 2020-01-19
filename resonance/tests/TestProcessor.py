@@ -43,7 +43,6 @@ class TestProcessor(unittest.TestCase):
             self.__assertBlockEquals(expected_channel, result_channel, msg, channel_name)
         self.__assertResults(expected, results, msg, channel_comparison)
 
-
     def check_processor(self, si, blocks, expected, processor, *arguments):
         def code():
             inputs = [resonance.input(idx) for idx in range(0, len(si))]

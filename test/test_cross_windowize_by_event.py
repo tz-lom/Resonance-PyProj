@@ -5,6 +5,7 @@ import resonance.cross.windowize_by_events
 import numpy as np
 import unittest
 
+
 class TestCrossWindowizeByEvent(TestProcessor):
     def setUp(self):
         self.window_size = 11
@@ -37,7 +38,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
 
         streams = [c_si, e_si]
         src_blocks = [db.Channels(c_si, 201, 1),
-                      db.Channels(c_si, 225, np.arange(2, 26)),
+                      db.Channels(c_si, 201 + 1e9/100*24, np.arange(2, 26)),
                       db.Event(e_si, 202, True),
                       db.Event(e_si, 301, False)]
 
