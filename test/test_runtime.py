@@ -22,14 +22,13 @@ class DummyTransformation(Processor):
         return db.make_empty(self._si)
 
     def offline(self, a, b):
-        result = db.combine(a, b)
+        result = db.combine(a, b, si=self._si)
         order = np.argsort(result.TS)
         result = result[order]
         return result
 
 
-
-class TestCrossWindowizeByEvent(TestProcessor):
+class TestMultipleSources(TestProcessor):
     def test_multiple_sources(self):
         si1 = si.Event(id=1)
         si2 = si.Event(id=2)

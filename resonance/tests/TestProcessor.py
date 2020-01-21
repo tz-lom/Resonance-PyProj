@@ -15,7 +15,7 @@ class TestProcessor(unittest.TestCase):
         self.assertTrue(expected_block.SI.is_similar(result_block.SI), '{}: Different types of {}'.format(msg, name))
         self.assertTrue(np.array_equal(expected_block.TS, result_block.TS),
                         '{}: Different timestamps of {}'.format(msg, name))
-        self.assertEqual(expected_block.is_similar(result_block),
+        self.assertTrue(expected_block.is_similar(result_block),
                          '{}: Different data in {}'.format(msg, name))
 
     def __assertResults(self, expected: dict, result: dict, msg, channel_comparison):

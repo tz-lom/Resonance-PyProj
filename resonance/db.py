@@ -70,7 +70,7 @@ class Event(Base, np.chararray):
             return np.array_equal(self[0], other)
 
     def is_similar(self, other):
-        if isinstance(other, Channels):
+        if isinstance(other, Event):
             return self._si.is_similar(other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
@@ -86,7 +86,7 @@ class Event(Base, np.chararray):
     def combine(*blocks, si=None):
         si = Base.combine(*blocks, si=si)
         message = np.concatenate(blocks)
-        if len(message) > 1:
+        if len(message) > 0:
             ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
         else:
             ts = np.empty(0, dtype=np.int64)

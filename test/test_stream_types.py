@@ -157,32 +157,26 @@ class TestEvents(unittest.TestCase):
 
         result = db.combine(*events)
 
-        target = [db.Event(e_si, 0, "a"),
-                  db.Event(e_si, 0, "b"),
-                  db.Event(e_si, 0, "c")]
-
-        type(target[0]).TS = 3
-        type(target[1]).TS = 5
-        type(target[2]).TS = 12
-
-        self.assertEqual(result[0], target[0])
-        self.assertEqual(result[1], target[1])
-        self.assertEqual(result[2], target[2])
+        self.assertEqual(result[0], "a")
+        self.assertEqual(result[1], "b")
+        self.assertEqual(result[2], "c")
+        self.assertTrue(np.array_equal(result.TS, np.asarray([3, 5, 12])))
+        self.assertEqual(result.SI, e_si)
 
         # event empty test
-        emptyEvents = [db.Event.make_empty(e_si),
+        empty_events = [db.Event.make_empty(e_si),
                        db.Event.make_empty(e_si)]
 
-        emptyEventsResult = db.combine(*emptyEvents)
+        empty_events_result = db.combine(*empty_events)
 
-        self.assertEqual(emptyEventsResult, db.Event.make_empty(e_si))
+        self.assertEqual(empty_events_result, db.Event.make_empty(e_si))
 
         # event empty test 1
-        emptyEvent = [db.Event.make_empty(e_si)]
+        empty_event = [db.Event.make_empty(e_si)]
 
-        emptyEventResult = db.combine(*emptyEvent)
+        empty_event_result = db.combine(*empty_event)
 
-        self.assertEqual(emptyEventResult, db.Event.make_empty(e_si))
+        self.assertEqual(empty_event_result, db.Event.make_empty(e_si))
 
     def test_equality(self):
         e_si = si.Event()
