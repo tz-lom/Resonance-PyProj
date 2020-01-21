@@ -12,11 +12,10 @@ class TestProcessor(unittest.TestCase):
                                   msg, name))
         self.assertEqual(type(expected_block), type(result_block),
                          '{}: Different block type for {}'.format(msg, name))
-        self.assertEqual(expected_block.SI, result_block.SI,
-                         '{}: Different types of {}'.format(msg, name))
+        self.assertTrue(expected_block.SI.is_similar(result_block.SI), '{}: Different types of {}'.format(msg, name))
         self.assertTrue(np.array_equal(expected_block.TS, result_block.TS),
                         '{}: Different timestamps of {}'.format(msg, name))
-        self.assertEqual(expected_block, result_block,
+        self.assertEqual(expected_block.is_similar(result_block),
                          '{}: Different data in {}'.format(msg, name))
 
     def __assertResults(self, expected: dict, result: dict, msg, channel_comparison):

@@ -38,10 +38,12 @@ class Base:
         return ret
 
     @staticmethod
-    def combine(*blocks):
-        si = blocks[0].SI
-        if len(list(filterfalse(lambda b: b.SI == si, blocks))) > 0:
-            raise Exception("All combined must be the same type")
+    def combine(*blocks, si=None):
+        if si is None:
+            si = blocks[0].SI
+            if any(map(lambda b: b.SI != si, blocks)):
+                raise Exception("All combined must be the same type")
+        return si
 
 
 class Event(Base, np.chararray):
@@ -67,6 +69,12 @@ class Event(Base, np.chararray):
         else:
             return np.array_equal(self[0], other)
 
+    def is_similar(self, other):
+        if isinstance(other, Channels):
+            return self._si.is_similar(other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+        else:
+            return np.array_equal(self, other)
+
     @staticmethod
     def make_empty(si):
         obj = np.empty(0, dtype=np.object).view(Event)
@@ -75,15 +83,15 @@ class Event(Base, np.chararray):
         return obj
 
     @staticmethod
-    def combine(*blocks):
-        Base.combine(*blocks)
+    def combine(*blocks, si=None):
+        si = Base.combine(*blocks, si=si)
         message = np.concatenate(blocks)
         if len(message) > 1:
             ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
         else:
             ts = np.empty(0, dtype=np.int64)
 
-        return Event(blocks[0].SI, ts, message)
+        return Event(si, ts, message)
 
 
 class Channels(Base, np.ndarray):
@@ -108,12 +116,18 @@ class Channels(Base, np.ndarray):
         else:
             return np.array_equal(self, other)
 
+    def is_similar(self, other):
+        if isinstance(other, Channels):
+            return self._si.is_similar(other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+        else:
+            return np.array_equal(self, other)
+
     @staticmethod
-    def combine(*blocks):
-        Base.combine(*blocks)
+    def combine(*blocks, si=None):
+        si = Base.combine(*blocks, si=si)
         data = np.concatenate(blocks)
         ts = np.concatenate([block.TS for block in blocks])
-        return Channels(blocks[0].SI, ts, data)
+        return Channels(si, ts, data)
 
     @staticmethod
     def make_empty(si):
@@ -140,6 +154,14 @@ class SingleWindow(np.ndarray):
 
     def __array_finalize__(self, obj):
         self._ts = getattr(obj, '_ts', None)
+
+    @property
+    def TS(self):
+        return self._ts
+
+    @TS.setter
+    def TS(self, ts):
+        self._ts = ts
 
 
 class Window(Base, np.ndarray):
@@ -181,15 +203,21 @@ class Window(Base, np.ndarray):
         else:
             return np.array_equal(self, other)
 
+    def is_similar(self, other):
+        if isinstance(other, Window):
+            return self._si.is_similar(other._si) and np.array_equal(self, other)
+        else:
+            return np.array_equal(self, other)
+
     @property
     def TS(self):
-        return np.asarray([window._ts[-1] for window in self], dtype=np.int64)
+        return np.asarray([window.TS[-1] for window in self], dtype=np.int64)
 
     @staticmethod
-    def combine(*blocks):
-        Base.combine(*blocks)
+    def combine(*blocks, si=None):
+        si = Base.combine(*blocks, si=si)
         obj = np.concatenate(blocks).view(Window)
-        Base.__new__(obj, blocks[0].SI, None)
+        Base.__new__(obj, si, None)
         return obj
 
     @staticmethod
@@ -212,8 +240,8 @@ class OutputStream(Base):
         return obj
 
 
-def combine(*blocks):
-    return type(blocks[0]).combine(*blocks)
+def combine(*blocks, si=None):
+    return type(blocks[0]).combine(*blocks, si=si)
 
 
 def make_empty(si):

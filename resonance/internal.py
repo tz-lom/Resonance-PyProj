@@ -15,6 +15,12 @@ class ExecutionPlan:
         return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}"\
             .format(self.plan, self.inputs_data, self.next_output_id, self.next_stream_id)
 
+    def get_node_by_input(self, si):
+        for step in self.plan.values():
+            if step.has_input(si):
+                return step
+        return None
+
 
 class ExecutionStep:
     def __init__(self, inputs, outputs, call):
@@ -25,6 +31,9 @@ class ExecutionStep:
     def __repr__(self):
         return "ExecutionStep\ninputs={}\noutputs={}\ncall={}"\
             .format(self.inputs, self.outputs, self.call)
+
+    def has_input(self, si):
+        return si in self.inputs;
 
 
 execution_plan = ExecutionPlan()
