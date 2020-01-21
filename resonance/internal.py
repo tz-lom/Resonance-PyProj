@@ -189,8 +189,7 @@ class create_output(Processor):
         self._callback = None
 
     def _send_np_based(self, data: resonance.db.Channels):
-        if np.size(data, 0) > 0:
-            add_to_queue('sendBlockToStream', (self._si, data))
+        add_to_queue('sendBlockToStream', (self._si, data))
         return resonance.db.OutputStream(self._si)
 
     def prepare(self, stream: resonance.db.Base, name: str):

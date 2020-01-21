@@ -67,7 +67,6 @@ class windowize_by_events(Processor):
         return self._si
 
     def online(self, input_stream, events):
-        # @todo: windowize_by_events processor - implement work with a ring buffer !!!
         # combine signal
         self._signal.extend(input_stream)
         self._times.extend(input_stream.TS)

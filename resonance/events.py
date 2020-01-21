@@ -19,7 +19,6 @@ def on_data_block(block):
 
     args = list(map(prepare_input, plan.inputs))
     result = plan.call.online(*args)
-    result.SI = plan.outputs
     on_data_block(result)
 
 
