@@ -24,7 +24,7 @@ class windowize_by_events(Processor):
         self._times = None
         self._lastTS = None
         self._lastSample = None
-        self._grabSampleQueue = None
+        self._events = None
         self._windowSelector = None
         self._samplingRate = None
         self._si = None
@@ -46,7 +46,7 @@ class windowize_by_events(Processor):
         self._pointer = 0
         self._lastTS = None
         self._lastSample = 0
-        self._grabSampleQueue = np.zeros(0)
+        self._events = db.make_empty(events.SI)
         self._windowSelector = np.arange(0, window_size-1)
         self._samplingRate = input_stream.SI.samplingRate
         self._window_size = window_size
@@ -67,39 +67,40 @@ class windowize_by_events(Processor):
         return self._si
 
     def online(self, input_stream, events):
-        # @todo: windowize_by_events processor - implement work with a ring buffer !!!
         # combine signal
         self._signal.extend(input_stream)
-        self._times.extend(events)
+        self._times.extend(input_stream.TS)
 
         # combine events
         if len(events) > 0:
-            np.append(self._grabSampleQueue, events)
+            self._events = db.combine(self._events, events)
 
-        result = np.zeros((0, self._si.channels))
+        result = db.make_empty(self._si)
 
-        while len(self._grabSampleQueue) > 0:
-            gs = self._grabSampleQueue[0]
+        while len(self._events) > 0 and len(self._times)>0:
+            gs = self._events.TS[0]
 
-            moar = self._times.__array__().searchsorted(gs)
+            ts_index = np.array(self._times).searchsorted(gs)
 
-            if moar == np.nan:
-                raise Exception("windowize_by_events processor: event timestamp has not found in data.")
-                #  break
+            if ts_index == 0 and self._times[0] > gs:
+                # throw away that event cause data for it could not be received anyway
+                self._events = self._events[2:]
+                continue
 
-            if (moar > 0) and (moar < len(self._times)):
-                pos = moar[0] + 1 + self._shift
+            if ts_index < len(self._times):
+                pos = ts_index + self._shift
 
                 if pos < 1:
                     # early event, drop it
-                    del self._grabSampleQueue[-1]
+                    self._events = self._events[2:]
                     continue
 
-                if self._pointer >= (pos + self._window_size):
+                if len(self._times) >= (pos + self._window_size):
                     # get window and move on
-                    wnd = db.Window(self._si, self._times[pos + self._windowSelector], self._signal[pos + self._windowSelector, ])
-                    del self._grabSampleQueue[-1]
-                    result.append([wnd])
+                    window_range = range(pos, pos+self._window_size)
+                    wnd = db.Window(self._si, self._times[window_range], self._signal[window_range, ])
+                    self._events = self._events[2:]
+                    result = db.combine(result, wnd)
                     continue
 
                 break  # wait until full window arrives
@@ -107,8 +108,5 @@ class windowize_by_events(Processor):
             else:
                 break  # waiting for samples
 
-        if np.size(result, 0) > 0:
-            return db.Window(self._si, None, result)
-        else:
-            return db.Window.make_empty(self._si)
+        return result
 
