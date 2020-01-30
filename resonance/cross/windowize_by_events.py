@@ -4,7 +4,7 @@ from resonance.internal import declare_transformation, Processor
 import numpy as np
 import numpy_ringbuffer as np_rb
 import math
-
+import datetime
 
 @declare_transformation
 # Split data stream to windows using event stream
@@ -77,14 +77,14 @@ class windowize_by_events(Processor):
 
         result = db.make_empty(self._si)
 
-        while len(self._events) > 0 and len(self._times)>0:
+        while len(self._events) > 0 and len(self._times) > 0:
             gs = self._events.TS[0]
 
             ts_index = np.array(self._times).searchsorted(gs)
 
             if ts_index == 0 and self._times[0] > gs:
                 # throw away that event cause data for it could not be received anyway
-                self._events = self._events[2:]
+                self._events = self._events[1:]
                 continue
 
             if ts_index < len(self._times):
@@ -92,15 +92,37 @@ class windowize_by_events(Processor):
 
                 if pos < 1:
                     # early event, drop it
-                    self._events = self._events[2:]
+                    self._events = self._events[1:]
                     continue
 
                 if len(self._times) >= (pos + self._window_size):
                     # get window and move on
                     window_range = range(pos, pos+self._window_size)
                     wnd = db.Window(self._si, self._times[window_range], self._signal[window_range, ])
-                    self._events = self._events[2:]
+
+                    print('[{}] windowize_by_events.online(): generate window, ID={}, data={}'.format(
+                        datetime.datetime.now().time(),
+                        wnd.SI.id,
+                        wnd))
+
+                    print('[{}] windowize_by_events.online(): remove event, ID={}, data={}'.format(
+                        datetime.datetime.now().time(),
+                        self._events[1:].SI.id,
+                        self._events[1:]))
+
+                    self._events = self._events[1:]
+
+                    print('[{}] windowize_by_events.online(): result events{}'.format(
+                        datetime.datetime.now().time(),
+                        self._events))
+
                     result = db.combine(result, wnd)
+
+                    print('[{}] windowize_by_events.online(): result window, ID={}, data={}'.format(
+                        datetime.datetime.now().time(),
+                        result.SI.id,
+                        result))
+
                     continue
 
                 break  # wait until full window arrives

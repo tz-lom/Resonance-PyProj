@@ -3,7 +3,7 @@ import copy
 import resonance
 import resonance.run
 import numpy as np
-
+import datetime
 
 class TestProcessor(unittest.TestCase):
     def __assertBlockEquals(self, expected_block, result_block, msg, name):
@@ -13,6 +13,13 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(type(expected_block), type(result_block),
                          '{}: Different block type for {}'.format(msg, name))
         self.assertTrue(expected_block.SI.is_similar(result_block.SI), '{}: Different types of {}'.format(msg, name))
+
+        print('[{}] TestProcessor.__assertBlockEquals(): Compare data blocks by TS: result ID={}, result TS={},'
+              ' result data={}, expected ID={}, expected TS={}. expected data={}'.format
+              (datetime.datetime.now().time(),
+               result_block.SI.id, result_block.TS, result_block,
+               expected_block.SI.id, expected_block.TS, expected_block))
+
         self.assertTrue(np.array_equal(expected_block.TS, result_block.TS),
                         '{}: Different timestamps of {}'.format(msg, name))
         self.assertTrue(expected_block.is_similar(result_block),
