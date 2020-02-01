@@ -11,7 +11,6 @@ import datetime
 # @param data Data stream
 # @param events Events stream
 # @param windowSize Size of resulting window
-# @param backBuffer Size of buffer for data, may be increased in case of big delay in events arrival
 # @param dropLateEvents Don't expand buffer infinitely, lateTime controls buffer size and any events that arrive
 #                       with timestamp earlier than last data timestamp-lateTime potentially can be dropped
 # @param lateTime - allowed delay for events (in seconds)
