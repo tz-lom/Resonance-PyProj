@@ -69,7 +69,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
         e_si = si.Event()
 
         streams = [c_si, e_si]
-        src_blocks = [
+        src_data = [
             db.Channels(c_si, timeoption2ts(c_si, 201), 1),
             db.Channels(c_si, timeoption2ts(c_si, 201 + 99), np.arange(2, 101)),
             db.Event(e_si, timeoption2ts(c_si, 202), "first event"),
@@ -93,7 +93,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
         ]
 
         self.check_processor(streams,
-                             src_blocks,
+                             src_data,
                              {'out_0': expected},
                              resonance.cross.windowize_by_events,
                              self.window_size,

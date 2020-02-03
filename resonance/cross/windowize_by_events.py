@@ -104,23 +104,9 @@ class windowize_by_events(Processor):
                         wnd.SI.id,
                         wnd))
 
-                    print('[{}] windowize_by_events.online(): remove event, ID={}, data={}'.format(
-                        datetime.datetime.now().time(),
-                        self._events[1:].SI.id,
-                        self._events[1:]))
-
                     self._events = self._events[1:]
 
-                    print('[{}] windowize_by_events.online(): result events{}'.format(
-                        datetime.datetime.now().time(),
-                        self._events))
-
                     result = db.combine(result, wnd)
-
-                    print('[{}] windowize_by_events.online(): result window, ID={}, data={}'.format(
-                        datetime.datetime.now().time(),
-                        result.SI.id,
-                        result))
 
                     continue
 
@@ -129,5 +115,42 @@ class windowize_by_events(Processor):
             else:
                 break  # waiting for samples
 
+        return result
+
+    def offline(self, input_data, events_data):
+        result = db.make_empty(self._si)
+
+        if len(input_data) <= 0 or len(events_data) <= 0:
+            return result
+
+        while len(events_data) > 0:
+            gs = events_data.TS[0]
+
+            ts_index = np.array(input_data.TS).searchsorted(gs)
+
+            if ts_index == 0 and input_data.TS[0] > gs:
+                events_data = events_data[1:]
+                continue
+
+            if ts_index < len(input_data.TS):
+                pos = ts_index + self._shift
+
+                if pos < 1:
+                    # early event, drop it
+                    events_data = events_data[1:]
+                    continue
+
+                if len(input_data.TS) >= (pos + self._window_size):
+                    window_range = range(pos, pos+self._window_size)
+                    wnd = db.Window(self._si, input_data.TS[window_range], input_data[window_range, ])
+
+                    print('[{}] windowize_by_events.offline(): generate window, ID={}, data={}'.format(
+                        datetime.datetime.now().time(),
+                        wnd.SI.id,
+                        wnd))
+
+                    events_data = events_data[1:]
+                    result = db.combine(result, wnd)
+                    continue
         return result
 
