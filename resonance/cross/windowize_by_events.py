@@ -5,13 +5,11 @@ import numpy as np
 import numpy_ringbuffer as np_rb
 import math
 
-
 @declare_transformation
 # Split data stream to windows using event stream
 # @param data Data stream
 # @param events Events stream
 # @param windowSize Size of resulting window
-# @param backBuffer Size of buffer for data, may be increased in case of big delay in events arrival
 # @param dropLateEvents Don't expand buffer infinitely, lateTime controls buffer size and any events that arrive
 #                       with timestamp earlier than last data timestamp-lateTime potentially can be dropped
 # @param lateTime - allowed delay for events (in seconds)
@@ -77,14 +75,14 @@ class windowize_by_events(Processor):
 
         result = db.make_empty(self._si)
 
-        while len(self._events) > 0 and len(self._times)>0:
+        while len(self._events) > 0 and len(self._times) > 0:
             gs = self._events.TS[0]
 
             ts_index = np.array(self._times).searchsorted(gs)
 
             if ts_index == 0 and self._times[0] > gs:
                 # throw away that event cause data for it could not be received anyway
-                self._events = self._events[2:]
+                self._events = self._events[1:]
                 continue
 
             if ts_index < len(self._times):
@@ -92,21 +90,62 @@ class windowize_by_events(Processor):
 
                 if pos < 1:
                     # early event, drop it
-                    self._events = self._events[2:]
+                    self._events = self._events[1:]
                     continue
 
                 if len(self._times) >= (pos + self._window_size):
                     # get window and move on
                     window_range = range(pos, pos+self._window_size)
                     wnd = db.Window(self._si, self._times[window_range], self._signal[window_range, ])
-                    self._events = self._events[2:]
+
+                    self._events = self._events[1:]
+
                     result = db.combine(result, wnd)
+
                     continue
 
                 break  # wait until full window arrives
 
             else:
                 break  # waiting for samples
+
+        return result
+
+    def offline(self, input_data, events_data):
+        result = db.make_empty(self._si)
+
+        if len(input_data) <= 0 or len(events_data) <= 0:
+            return result
+
+        while len(events_data) > 0:
+            first_event_ts = events_data.TS[0]
+
+            ts_index = np.array(input_data.TS).searchsorted(first_event_ts)
+
+            if ts_index == 0 and input_data.TS[0] > first_event_ts:
+                events_data = events_data[1:]
+                continue
+
+            if ts_index < len(input_data.TS):
+                sample_pos = ts_index + self._shift
+
+                if sample_pos < 1:
+                    # early event, drop it
+                    events_data = events_data[1:]
+                    continue
+
+                if len(input_data.TS) >= (sample_pos + self._window_size):
+                    window_range = range(sample_pos, sample_pos+self._window_size)
+                    wnd = db.Window(self._si, input_data.TS[window_range], input_data[window_range, ])
+
+                    events_data = events_data[1:]
+
+                    result = db.combine(result, wnd)
+                    continue
+                break
+
+            else:
+                break
 
         return result
 
