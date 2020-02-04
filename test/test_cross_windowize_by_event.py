@@ -35,7 +35,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
                              self.drop_late_events,
                              self.late_time)
 
-    def test_1(self):
+    def test_windowize(self):
         c_si = si.Channels(self.channels, self.sampling_rate)
         e_si = si.Event()
 
@@ -63,7 +63,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
                              self.drop_late_events,
                              self.late_time)
 
-    def test_2(self):
+    def test_windowize_large_data(self):
         late_time = 2
         c_si = si.Channels(self.channels, self.sampling_rate)
         e_si = si.Event()

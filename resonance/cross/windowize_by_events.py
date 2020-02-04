@@ -4,7 +4,6 @@ from resonance.internal import declare_transformation, Processor
 import numpy as np
 import numpy_ringbuffer as np_rb
 import math
-import datetime
 
 @declare_transformation
 # Split data stream to windows using event stream
@@ -99,11 +98,6 @@ class windowize_by_events(Processor):
                     window_range = range(pos, pos+self._window_size)
                     wnd = db.Window(self._si, self._times[window_range], self._signal[window_range, ])
 
-                    print('[{}] windowize_by_events.online(): generate window, ID={}, data={}'.format(
-                        datetime.datetime.now().time(),
-                        wnd.SI.id,
-                        wnd))
-
                     self._events = self._events[1:]
 
                     result = db.combine(result, wnd)
@@ -124,33 +118,34 @@ class windowize_by_events(Processor):
             return result
 
         while len(events_data) > 0:
-            gs = events_data.TS[0]
+            first_event_ts = events_data.TS[0]
 
-            ts_index = np.array(input_data.TS).searchsorted(gs)
+            ts_index = np.array(input_data.TS).searchsorted(first_event_ts)
 
-            if ts_index == 0 and input_data.TS[0] > gs:
+            if ts_index == 0 and input_data.TS[0] > first_event_ts:
                 events_data = events_data[1:]
                 continue
 
             if ts_index < len(input_data.TS):
-                pos = ts_index + self._shift
+                sample_pos = ts_index + self._shift
 
-                if pos < 1:
+                if sample_pos < 1:
                     # early event, drop it
                     events_data = events_data[1:]
                     continue
 
-                if len(input_data.TS) >= (pos + self._window_size):
-                    window_range = range(pos, pos+self._window_size)
+                if len(input_data.TS) >= (sample_pos + self._window_size):
+                    window_range = range(sample_pos, sample_pos+self._window_size)
                     wnd = db.Window(self._si, input_data.TS[window_range], input_data[window_range, ])
 
-                    print('[{}] windowize_by_events.offline(): generate window, ID={}, data={}'.format(
-                        datetime.datetime.now().time(),
-                        wnd.SI.id,
-                        wnd))
-
                     events_data = events_data[1:]
+
                     result = db.combine(result, wnd)
                     continue
+                break
+
+            else:
+                break
+
         return result
 

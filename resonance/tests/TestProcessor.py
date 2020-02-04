@@ -3,7 +3,6 @@ import copy
 import resonance
 import resonance.run
 import numpy as np
-import datetime
 
 class TestProcessor(unittest.TestCase):
     def __assertBlockEquals(self, expected_block, result_block, msg, name):
