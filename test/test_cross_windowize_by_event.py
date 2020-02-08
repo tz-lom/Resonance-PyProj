@@ -32,10 +32,9 @@ class TestCrossWindowizeByEvent(TestProcessor):
                              resonance.cross.windowize_by_events,
                              self.window_size,
                              self.shift,
-                             self.drop_late_events,
                              self.late_time)
 
-    def test_windowize(self):
+    def test_data_smaller_than_ring_buffer_length(self):
         c_si = si.Channels(self.channels, self.sampling_rate)
         e_si = si.Event()
 
@@ -60,10 +59,9 @@ class TestCrossWindowizeByEvent(TestProcessor):
                              resonance.cross.windowize_by_events,
                              self.window_size,
                              self.shift,
-                             self.drop_late_events,
                              self.late_time)
 
-    def test_windowize_large_data(self):
+    def test_data_bigger_than_ring_buffer_length(self):
         late_time = 2
         c_si = si.Channels(self.channels, self.sampling_rate)
         e_si = si.Event()
@@ -98,6 +96,5 @@ class TestCrossWindowizeByEvent(TestProcessor):
                              resonance.cross.windowize_by_events,
                              self.window_size,
                              self.shift,
-                             self.drop_late_events,
                              late_time)
 
