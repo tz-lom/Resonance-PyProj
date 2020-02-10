@@ -16,6 +16,9 @@ class Base:
         return self._name
 
     def __eq__(self, other):
+        return self.id == other.id and self.is_similar(other)
+
+    def is_similar(self, other):
         if self.__dict__.keys() != other.__dict__.keys():
             return False
 
@@ -23,6 +26,7 @@ class Base:
             if key not in ['_id', '_name', 'online']:
                 if other.__dict__[key] != value:
                     return False
+
         return True
 
 

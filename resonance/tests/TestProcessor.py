@@ -4,7 +4,6 @@ import resonance
 import resonance.run
 import numpy as np
 
-
 class TestProcessor(unittest.TestCase):
     def __assertBlockEquals(self, expected_block, result_block, msg, name):
         self.assertIsInstance(expected_block, resonance.db.Base,
@@ -12,11 +11,11 @@ class TestProcessor(unittest.TestCase):
                                   msg, name))
         self.assertEqual(type(expected_block), type(result_block),
                          '{}: Different block type for {}'.format(msg, name))
-        self.assertEqual(expected_block.SI, result_block.SI,
-                         '{}: Different types of {}'.format(msg, name))
+        self.assertTrue(expected_block.SI.is_similar(result_block.SI), '{}: Different types of {}'.format(msg, name))
+
         self.assertTrue(np.array_equal(expected_block.TS, result_block.TS),
                         '{}: Different timestamps of {}'.format(msg, name))
-        self.assertEqual(expected_block, result_block,
+        self.assertTrue(expected_block.is_similar(result_block),
                          '{}: Different data in {}'.format(msg, name))
 
     def __assertResults(self, expected: dict, result: dict, msg, channel_comparison):
@@ -42,7 +41,6 @@ class TestProcessor(unittest.TestCase):
             channel_name = 'channel {}'.format(name)
             self.__assertBlockEquals(expected_channel, result_channel, msg, channel_name)
         self.__assertResults(expected, results, msg, channel_comparison)
-
 
     def check_processor(self, si, blocks, expected, processor, *arguments):
         def code():

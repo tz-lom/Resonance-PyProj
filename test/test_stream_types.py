@@ -7,6 +7,25 @@ import copy
 
 
 class TestChannels(unittest.TestCase):
+    def test_si_comparisons(self):
+        si1 = si.Channels(1, 20)
+        si2 = si.Channels(2, 20)
+        self.assertNotEqual(si1, si2)
+
+        si3 = si.Channels(1, 21)
+        self.assertNotEqual(si1, si3)
+
+        si4 = si.Channels(1, 20)
+        self.assertEqual(si1, si4)
+
+        si5 = si.Channels(1, 20, id=3)
+        self.assertNotEqual(si1, si5)
+
+        self.assertTrue(si1.is_similar(si1))
+        self.assertFalse(si1.is_similar(si2))
+        self.assertFalse(si1.is_similar(si3))
+        self.assertTrue(si1.is_similar(si4))
+        self.assertTrue(si1.is_similar(si5))
 
     def test_single_channel(self):
         c_si = si.Channels(1, 20)
@@ -41,6 +60,16 @@ class TestChannels(unittest.TestCase):
         same_by_calc -= offset
         self.assertEqual(origin, same_by_calc)
 
+    def test_is_similar(self):
+        si1 = si.Channels(1, 20, id=1)
+        si2 = si.Channels(1, 20, id=2)
+
+        db1 = db.Channels(si1, 300, [1])
+        db2 = db.Channels(si2, 300, [1])
+
+        self.assertNotEqual(db1, db2)
+        self.assertTrue(db1.is_similar(db2))
+
     def test_merge(self):
         c_si = si.Channels(5, 20)
 
@@ -52,6 +81,18 @@ class TestChannels(unittest.TestCase):
         O = db.Channels(c_si, timeoption2ts(c_si, 224), np.arange(1, 121))
 
         self.assertEqual(O, M)
+
+    def test_merge_si_override(self):
+        si1 = si.Channels(1, 20, id=1)
+        si2 = si.Channels(1, 20, id=2)
+        si3 = si.Channels(1, 20, id=3)
+        A = db.Channels(si1, timeoption2ts(si1, 205), [1])
+        B = db.Channels(si2, timeoption2ts(si2, 206), [2])
+
+        merged = db.combine(A, B, si=si3)
+        expected = db.Channels(si3, timeoption2ts(si3, 206), [1, 2])
+
+        self.assertEqual(merged, expected)
 
     def test_empty(self):
         c_si = si.Channels(5, 20)
@@ -74,6 +115,36 @@ class TestChannels(unittest.TestCase):
 
 
 class TestEvents(unittest.TestCase):
+    def test_si_comparisons(self):
+        si1 = si.Event(id=1)
+        si2 = si.Event(id=2)
+        si3 = si.Event(id=1)
+
+        self.assertNotEqual(si1, si2)
+        self.assertEqual(si1, si3)
+        self.assertTrue(si1.is_similar(si2))
+        self.assertTrue(si1.is_similar(si3))
+
+    def test_db_comparisons(self):
+        si1 = si.Event(id=1)
+        si2 = si.Event(id=2)
+        si3 = si.Event(id=1)
+
+        db1 = db.Event(si1, 11, 'A')
+        db2 = db.Event(si2, 11, 'A')
+        db3 = db.Event(si3, 11, 'A')
+        db4 = db.Event(si1, 11, 'B')
+        db5 = db.Event(si1, 12, 'A')
+
+        self.assertNotEqual(db1, db2)
+        self.assertEqual(db1, db3)
+        self.assertNotEqual(db1, db4)
+        self.assertNotEqual(db1, db5)
+
+        self.assertTrue(db1.is_similar(db2))
+        self.assertTrue(db1.is_similar(db3))
+        self.assertFalse(db1.is_similar(db4))
+        self.assertFalse(db1.is_similar(db5))
 
     def test_merge(self):
         e_si = si.Event()
@@ -86,32 +157,26 @@ class TestEvents(unittest.TestCase):
 
         result = db.combine(*events)
 
-        target = [db.Event(e_si, 0, "a"),
-                  db.Event(e_si, 0, "b"),
-                  db.Event(e_si, 0, "c")]
-
-        type(target[0]).TS = 3
-        type(target[1]).TS = 5
-        type(target[2]).TS = 12
-
-        self.assertEqual(result[0], target[0])
-        self.assertEqual(result[1], target[1])
-        self.assertEqual(result[2], target[2])
+        self.assertEqual(result[0], "a")
+        self.assertEqual(result[1], "b")
+        self.assertEqual(result[2], "c")
+        self.assertTrue(np.array_equal(result.TS, np.asarray([3, 5, 12])))
+        self.assertEqual(result.SI, e_si)
 
         # event empty test
-        emptyEvents = [db.Event.make_empty(e_si),
+        empty_events = [db.Event.make_empty(e_si),
                        db.Event.make_empty(e_si)]
 
-        emptyEventsResult = db.combine(*emptyEvents)
+        empty_events_result = db.combine(*empty_events)
 
-        self.assertEqual(emptyEventsResult, db.Event.make_empty(e_si))
+        self.assertEqual(empty_events_result, db.Event.make_empty(e_si))
 
         # event empty test 1
-        emptyEvent = [db.Event.make_empty(e_si)]
+        empty_event = [db.Event.make_empty(e_si)]
 
-        emptyEventResult = db.combine(*emptyEvent)
+        empty_event_result = db.combine(*empty_event)
 
-        self.assertEqual(emptyEventResult, db.Event.make_empty(e_si))
+        self.assertEqual(empty_event_result, db.Event.make_empty(e_si))
 
     def test_equality(self):
         e_si = si.Event()

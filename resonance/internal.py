@@ -15,6 +15,12 @@ class ExecutionPlan:
         return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}"\
             .format(self.plan, self.inputs_data, self.next_output_id, self.next_stream_id)
 
+    def get_node_by_input(self, si):
+        for step in self.plan.values():
+            if step.has_input(si):
+                return step
+        return None
+
 
 class ExecutionStep:
     def __init__(self, inputs, outputs, call):
@@ -25,6 +31,9 @@ class ExecutionStep:
     def __repr__(self):
         return "ExecutionStep\ninputs={}\noutputs={}\ncall={}"\
             .format(self.inputs, self.outputs, self.call)
+
+    def has_input(self, si):
+        return si in self.inputs;
 
 
 execution_plan = ExecutionPlan()
@@ -180,8 +189,7 @@ class create_output(Processor):
         self._callback = None
 
     def _send_np_based(self, data: resonance.db.Channels):
-        if np.size(data, 0) > 0:
-            add_to_queue('sendBlockToStream', (self._si, data))
+        add_to_queue('sendBlockToStream', (self._si, data))
         return resonance.db.OutputStream(self._si)
 
     def prepare(self, stream: resonance.db.Base, name: str):
