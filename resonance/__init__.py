@@ -1,4 +1,3 @@
-from . import pipe
 try:
     import resonate
 
