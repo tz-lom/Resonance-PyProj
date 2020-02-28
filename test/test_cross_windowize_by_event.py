@@ -82,11 +82,11 @@ class TestCrossWindowizeByEvent(TestProcessor):
         expected = [
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
-            db.Window(w_si, timeoption2ts(c_si, 201 + self.window_size), np.arange(2, 13)),
+            db.Window(w_si, timeoption2ts(c_si, 201 + self.window_size), np.arange(2, 13), src_data[2]),
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
-            db.Window(w_si, timeoption2ts(c_si, 512 + self.window_size), np.arange(313, 324)),
+            db.Window(w_si, timeoption2ts(c_si, 512 + self.window_size), np.arange(313, 324), src_data[6]),
             db.Window.make_empty(w_si)
         ]
 

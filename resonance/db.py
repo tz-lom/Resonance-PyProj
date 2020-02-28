@@ -138,9 +138,10 @@ class Channels(Base, np.ndarray):
 
 
 class SingleWindow(np.ndarray):
-    def __new__(cls, ts: np.ndarray, data: np.ndarray):
+    def __new__(cls, ts: np.ndarray, data: np.ndarray, metadata: any = None):
         obj = data.view(SingleWindow)
         obj._ts = ts
+        obj._metadata = metadata
         return obj
 
     def __ne__(self, other):
@@ -148,12 +149,23 @@ class SingleWindow(np.ndarray):
 
     def __eq__(self, other):
         if isinstance(other, SingleWindow):
-            return np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+            return np.array_equal(self._ts, other._ts) \
+                   and np.array_equal(self, other) \
+                   and np.array_equal(self.metadata, other.metadata)
         else:
             return np.array_equal(self, other)
 
     def __array_finalize__(self, obj):
         self._ts = getattr(obj, '_ts', None)
+        self._metadata = getattr(obj, '_metadata', None)
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, value):
+        self._metadata = value
 
     @property
     def TS(self):
@@ -165,7 +177,7 @@ class SingleWindow(np.ndarray):
 
 
 class Window(Base, np.ndarray):
-    def __new__(cls, si, ts, data):
+    def __new__(cls, si, ts, data, metadata:any = None):
 
         if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(data[0], SingleWindow):
             obj = data.view(Window)
@@ -187,7 +199,7 @@ class Window(Base, np.ndarray):
 
             ts = np.array(ts, dtype=np.int64)
 
-            window = SingleWindow(ts, data)
+            window = SingleWindow(ts, data, metadata)
             obj = np.ndarray((1,), dtype=object).view(Window)
             obj[0] = window
 
@@ -199,15 +211,23 @@ class Window(Base, np.ndarray):
 
     def __eq__(self, other):
         if isinstance(other, Window):
-            return (self._si == other._si) and np.array_equal(self, other)
+            return (self._si == other._si) \
+                   and np.array_equal(self, other) \
+                   and np.array_equal(self.metadata, other.metadata)
         else:
             return np.array_equal(self, other)
 
     def is_similar(self, other):
         if isinstance(other, Window):
-            return self._si.is_similar(other._si) and np.array_equal(self, other)
+            return self._si.is_similar(other._si) \
+                   and np.array_equal(self, other) \
+                   and np.array_equal(self.metadata, other.metadata)
         else:
             return np.array_equal(self, other)
+
+    @property
+    def metadata(self):
+        return np.asarray([window.metadata for window in self], dtype=object)
 
     @property
     def TS(self):
