@@ -212,16 +212,14 @@ class Window(Base, np.ndarray):
     def __eq__(self, other):
         if isinstance(other, Window):
             return (self._si == other._si) \
-                   and np.array_equal(self, other) \
-                   and np.array_equal(self.metadata, other.metadata)
+                   and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
 
     def is_similar(self, other):
         if isinstance(other, Window):
             return self._si.is_similar(other._si) \
-                   and np.array_equal(self, other) \
-                   and np.array_equal(self.metadata, other.metadata)
+                   and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
 

@@ -49,8 +49,8 @@ class TestCrossWindowizeByEvent(TestProcessor):
         expected = [
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
-            db.Window(w_si, timeoption2ts(c_si, 201 + self.window_size), np.arange(2, 13)),
-            db.Window(w_si, timeoption2ts(c_si, 289 + self.window_size), np.arange(90, 101)),
+            db.Window(w_si, timeoption2ts(c_si, 201 + self.window_size), np.arange(2, 13), src_blocks[2]),
+            db.Window(w_si, timeoption2ts(c_si, 289 + self.window_size), np.arange(90, 101), src_blocks[3]),
         ]
 
         self.check_processor(streams,
@@ -118,7 +118,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
-            db.Window(w_si, timeoption2ts(c_si, 121 + self.window_size + shift), np.arange(7, 18)),
+            db.Window(w_si, timeoption2ts(c_si, 121 + self.window_size + shift), np.arange(7, 18), src_blocks[4]),
             db.Window.make_empty(w_si),
         ]
 
@@ -150,7 +150,7 @@ class TestCrossWindowizeByEvent(TestProcessor):
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
             db.Window.make_empty(w_si),
-            db.Window(w_si, timeoption2ts(c_si, 101 + self.window_size + shift), np.arange(19, 30)),
+            db.Window(w_si, timeoption2ts(c_si, 101 + self.window_size + shift), np.arange(19, 30), src_blocks[2]),
             db.Window.make_empty(w_si),
         ]
 
