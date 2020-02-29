@@ -71,7 +71,7 @@ class windowize_by_events(Processor):
 
                 if len(times) >= (pos + self._window_size):
                     window_range = range(pos, pos + self._window_size)
-                    wnd = db.Window(self._si, times[window_range], signal[window_range, ])
+                    wnd = db.Window(self._si, times[window_range], signal[window_range, ], events[0:1])
                     events = events[1:]
                     result = db.combine(result, wnd)
                     continue
