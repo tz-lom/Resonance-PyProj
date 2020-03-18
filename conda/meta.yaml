@@ -1,0 +1,44 @@
+{% set name = "resonance_pip" %}
+{% set version = "1.0.1" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  git_url: c:\\sources\\Resonance-PyProj
+  git_rev: {{version}}
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - numpy
+    - pip
+    - python
+    - numpy_ringbuffer 
+    - scipy
+  run:
+    - numpy
+    - python
+    - numpy_ringbuffer 
+    - scipy
+
+test:
+  imports:
+    - resonance
+
+about:
+  home: "https://github.com/tz-lom/Resonance-PyProj"
+  license: MIT
+  license_family: MIT
+  license_file: 
+  summary: "Python package for Resonance"
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - tz-lom
