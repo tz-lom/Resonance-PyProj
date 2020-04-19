@@ -216,9 +216,9 @@ class TestWindow(unittest.TestCase):
         time_b = 6
         time_c = 35
 
-        A = db.Window(w_si, time_a, data_a)
-        B = db.Window(w_si, time_b, data_b)
-        C = db.Window(w_si, time_c, data_c)
+        A = db.Window(w_si, time_a, data_a, '1')
+        B = db.Window(w_si, time_b, data_b, '2')
+        C = db.Window(w_si, time_c, data_c, '3')
 
         M = db.combine(A, B, C)
 
@@ -228,6 +228,9 @@ class TestWindow(unittest.TestCase):
 
         self.assertTrue(np.array_equal(M.TS, [time_a, time_b, time_c]))
         # self.assertNotEqual(db.SingleWindow(3, np.arange(1, 21)), np.arange(21, 41))
+        self.assertTrue(np.array_equal(M.metadata, ['1', '2', '3']))
+
+        self.assertEqual(M[0].metadata, '1')
 
     def test_empty(self):
         w_si = si.Window(5, 20, 250)
@@ -249,4 +252,5 @@ class TestWindow(unittest.TestCase):
         B = copy.deepcopy(A)
 
         self.assertEqual(A, B)
+
 

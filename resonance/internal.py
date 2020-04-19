@@ -63,9 +63,9 @@ def declare_transformation(operator):
     if not issubclass(operator, Processor):
         raise Exception
 
-    def call(*inputs):
+    def call(*args, **kwargs):
         x = operator()
-        return x.call(*inputs)
+        return x.call(*args, **kwargs)
 
     return call
 
