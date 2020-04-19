@@ -92,3 +92,12 @@ class TestPipeBaseline(TestProcessor):
         with self.assertRaises(Exception):
             resonance.pipe.baseline(self.src_window, first_offset, end_offset)
 
+    def test_empty_window(self):
+        si = resonance.si.Window(1, 2, 20)
+
+        self.check_processor([si],
+                             [resonance.db.make_empty(si)],
+                             {'out_0': [resonance.db.make_empty(si)]},
+                             resonance.pipe.baseline,
+                             0,
+                             1)
