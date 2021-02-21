@@ -1,8 +1,9 @@
 name: publish_conda
 
 on: 
-  release:
-    types: [published, edited]
+  push:
+    branches:
+    - master
     
 jobs:
   publish:
@@ -15,6 +16,4 @@ jobs:
         subDir: 'conda'
         AnacondaToken: ${{ secrets.ANACONDA_TOKEN }}
         platforms: 'win osx linux'
-        channels:
-        - conda-forge
-        - bcilab
+        channels: 'conda-forge bcilab'
