@@ -185,6 +185,8 @@ class Window(Base, np.ndarray):
             return obj
         else:
             data = np.asarray(data)
+            if len(data) == 0:
+                return make_empty(si)
             if len(data.shape) != 2 or np.size(data, 1) != si.channels:
                 try:
                     data = data.reshape((si.samples, si.channels))
