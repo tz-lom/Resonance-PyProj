@@ -1,12 +1,11 @@
-{% set name = "resonance_pip" %}
 {% set version = "1.0.1" %}
 
 package:
-  name: "{{ name|lower }}"
-  version: "{{ version }}"
+  name: resonance_pip
+  version: {{ version }}
 
 source:
-  git_url: c:\\sources\\Resonance-PyProj
+  git_url: https://github.com/tz-lom/Resonance-PyProj.git
   git_rev: {{version}}
 
 build:
@@ -31,13 +30,10 @@ test:
     - resonance
 
 about:
-  home: "https://github.com/tz-lom/Resonance-PyProj"
+  home: https://github.com/tz-lom/Resonance-PyProj
   license: MIT
   license_family: MIT
-  license_file: 
   summary: "Python package for Resonance"
-  doc_url: 
-  dev_url: 
 
 extra:
   recipe-maintainers:
