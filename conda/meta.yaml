@@ -1,28 +1,22 @@
-{% set data = load_setup_py_data() %}
-
 package:
   name: resonance_pip
-  version: {{ data['version'] }}
+  version: {{ GIT_VERSION }}  # git describe --tags --abbrev=0
 
 source:
   git_url: https://github.com/tz-lom/Resonance-PyProj.git
-  git_rev: {{ data['version'] }}
+  git_rev: {{ GIT_COMMIT_ID }}  # git describe --tags --abbrev=0
 
 build:
-  number: 0
+  number: {{ GIT_BUILD_NUMBER }}  # git rev-list  `git rev-list --tags --no-walk --max-count=1`..HEAD --count
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
-  host:
-    - numpy
-    - pip
+  build:
     - python
-    - numpy_ringbuffer 
-    - scipy
+    - setuptools
   run:
     - numpy
-    - python
-    - numpy_ringbuffer 
+    - numpy_ringbuffer
     - scipy
 
 test:
@@ -30,9 +24,9 @@ test:
     - resonance
 
 about:
-  home: {{ data['url'] }}
-  license: {{ data['license'] }}
-summary: {{ data['description'] }}
+  home: https://github.com/tz-lom/Resonance-PyProj.git
+  license: MIT
+summary: Resonance python package
 
 extra:
   recipe-maintainers:
