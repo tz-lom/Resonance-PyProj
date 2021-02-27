@@ -71,7 +71,6 @@ def declare_transformation(operator):
 
 
 class Processor:
-
     def call(self, *inputs):
         outputs_si = self.prepare(*inputs)
 
@@ -103,89 +102,11 @@ class Processor:
             else:
                 return self.offline(*data_streams)
 
-#   processor(
-#     data,
-#     prepare = function(env){
-#
-#       id <- .execution_plan$nextOutputId
-#       .execution_plan$nextOutputId <- .execution_plan$nextOutputId+1
-#
-#       args <- SI(data)
-#       args$id <- id
-#       args$name <- name
-#
-#       do.call(addToQueue, c(list("createOutputStream"), args))
-#
-#       env$id <- id
-#
-#       if(SI.is.channels(data))
-#       {
-#         env$cb <- function(data){
-#           if(length(data)>0){
-#             addToQueue(
-#               "sendBlockToStream",
-#               id = id,
-#               data= data
-#             )
-#           }
-#           list()
-#         }
-#       }
-#       else if(SI.is.event(data))
-#         {
-#         env$cb <- function(data){
-#           for(d in data){
-#             addToQueue(
-#               "sendBlockToStream",
-#               id = id,
-#               data= d
-#             )
-#           }
-#           list()
-#         }
-#       }
-#       else if(SI.is.window(data))
-#       {
-#         env$cb <- function(data){
-#           for(d in data){
-#             addToQueue(
-#               "sendBlockToStream",
-#               id = id,
-#               data= d
-#             )
-#           }
-#           list()
-#         }
-#       }
-#       else if(SI.is.epoch(data))
-#       {
-#         env$cb <- function(data){
-#           for(d in data){
-#             addToQueue(
-#               "sendBlockToStream",
-#               id=id,
-#               data=d
-#             )
-#           }
-#           list()
-#         }
-#       }
-#       else
-#       {
-#         stop("[createOutput] Unsupported stream type=",SI(data)$type, call.=F)
-#       }
-#
-#       SI.outputStream(name, id)
-#
-#     },
-#     online = function(data){
-#       cb(data)
-#     }
-#   )
 @declare_transformation
 class create_output(Processor):
     def __init__(self):
         self._si = None
+        self._stream_si = None
         self._callback = None
 
     def _send_np_based(self, data: resonance.db.Channels):
@@ -196,71 +117,17 @@ class create_output(Processor):
         global execution_plan
 
         id = execution_plan.next_output_id
-
         execution_plan.next_output_id += 1
 
-        if isinstance(stream.SI, resonance.si.Channels) or isinstance(stream.SI, resonance.si.Event) or isinstance(stream.SI, resonance.si.Window):
+        if isinstance(stream.SI, resonance.si.Channels) or\
+                isinstance(stream.SI, resonance.si.Event) or\
+                isinstance(stream.SI, resonance.si.Window):
             self._callback = self._send_np_based
             self._si = resonance.si.OutputStream(id, name, stream.SI)
+            self._stream_si = stream.SI
             add_to_queue('createOutputStream', self._si)
         else:
             raise Exception("Unsupported stream type")
-    #       {
-    #         env$cb <- function(data){
-    #           if(length(data)>0){
-    #             addToQueue(
-    #               "sendBlockToStream",
-    #               id = id,
-    #               data= data
-    #             )
-    #           }
-    #           list()
-    #         }
-    #       }
-    #       else if(SI.is.event(data))
-    #         {
-    #         env$cb <- function(data){
-    #           for(d in data){
-    #             addToQueue(
-    #               "sendBlockToStream",
-    #               id = id,
-    #               data= d
-    #             )
-    #           }
-    #           list()
-    #         }
-    #       }
-    #       else if(SI.is.window(data))
-    #       {
-    #         env$cb <- function(data){
-    #           for(d in data){
-    #             addToQueue(
-    #               "sendBlockToStream",
-    #               id = id,
-    #               data= d
-    #             )
-    #           }
-    #           list()
-    #         }
-    #       }
-    #       else if(SI.is.epoch(data))
-    #       {
-    #         env$cb <- function(data){
-    #           for(d in data){
-    #             addToQueue(
-    #               "sendBlockToStream",
-    #               id=id,
-    #               data=d
-    #             )
-    #           }
-    #           list()
-    #         }
-    #       }
-    #       else
-    #       {
-    #         stop("[createOutput] Unsupported stream type=",SI(data)$type, call.=F)
-    #       }
-    #
         return self._si
 
     def online(self, data: resonance.db.Base):

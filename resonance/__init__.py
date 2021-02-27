@@ -23,9 +23,17 @@ except:
     pass
 
 
+def __input(id):
+    raise Exception("Can't execute directly")
+
+
 def input(id):
+    return __input(id)
+
+
+def __createOutput(name: str, data):
     raise Exception("Can't execute directly")
 
 
-def createOutput(name, data):
-    raise Exception("Can't execute directly")
+def createOutput(name: str, data):
+    return __createOutput(name, data)

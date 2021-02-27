@@ -38,8 +38,8 @@ def on_prepare(code, descriptions):
     def plan_input(index):
         return internal.execution_plan.inputs_data[index]
 
-    resonance.input = plan_input
-    resonance.createOutput = resonance.internal.create_output
+    resonance.__input = plan_input
+    resonance.__createOutput = resonance.internal.create_output
 
     if callable(code):
         code()

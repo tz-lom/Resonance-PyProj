@@ -26,8 +26,8 @@ def offline(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: 
     def create_output(data, name):
         results[name] = data
 
-    resonance.input = input_handler
-    resonance.createOutput = create_output
+    resonance.__input = input_handler
+    resonance.__createOutput = create_output
 
     if callable(code):
         code()
@@ -39,6 +39,7 @@ def offline(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: 
 
 def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: code_type, return_blocks: bool = False):
     outputs = {}
+    outputs_si = {}
 
     id = 100
     for i_si in stream_info:
@@ -52,6 +53,9 @@ def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: c
         if len(queue) > 0:
             for cmd, data in queue:
                 if cmd == 'createOutputStream':
+                    if data.name in outputs:
+                        raise Exception('Stream "{}" is already declared'.format(data.name))
+                    outputs_si[data.name] = data
                     outputs[data.name] = []
                     pass
                 if cmd == 'sendBlockToStream':
@@ -75,4 +79,4 @@ def online(stream_info: Sequence[StreamInfo], blocks: Sequence[db.Base], code: c
     if return_blocks:
         return outputs
     else:
-        return {name: db.combine(*values) for name, values in outputs.items()}
+        return {name: db.combine(*values, si=outputs_si[name].source) for name, values in outputs.items()}

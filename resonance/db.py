@@ -3,6 +3,14 @@ from itertools import filterfalse
 from typing import Optional
 
 
+def si_from_blocks(*blocks, si=None):
+    if si is None:
+        si = blocks[0].SI
+        if any(map(lambda b: b.SI != si, blocks)):
+            raise Exception("All combined must be the same type")
+    return si
+
+
 class Base:
     def __new__(cls, si, timestamp: Optional[np.ndarray], *kargs):
         cls._si = si
@@ -36,14 +44,6 @@ class Base:
             elif isinstance(item, list) or isinstance(item, slice):
                 ret._ts = self._ts[item]
         return ret
-
-    @staticmethod
-    def combine(*blocks, si=None):
-        if si is None:
-            si = blocks[0].SI
-            if any(map(lambda b: b.SI != si, blocks)):
-                raise Exception("All combined must be the same type")
-        return si
 
 
 class Event(Base, np.chararray):
@@ -84,7 +84,7 @@ class Event(Base, np.chararray):
 
     @staticmethod
     def combine(*blocks, si=None):
-        si = Base.combine(*blocks, si=si)
+        si = si_from_blocks(*blocks, si=si)
         message = np.concatenate(blocks)
         if len(message) > 0:
             ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
@@ -124,7 +124,7 @@ class Channels(Base, np.ndarray):
 
     @staticmethod
     def combine(*blocks, si=None):
-        si = Base.combine(*blocks, si=si)
+        si = si_from_blocks(*blocks, si=si)
         data = np.concatenate(blocks)
         ts = np.concatenate([block.TS for block in blocks])
         return Channels(si, ts, data)
@@ -235,7 +235,7 @@ class Window(Base, np.ndarray):
 
     @staticmethod
     def combine(*blocks, si=None):
-        si = Base.combine(*blocks, si=si)
+        si = si_from_blocks(*blocks, si=si)
         obj = np.concatenate(blocks).view(Window)
         Base.__new__(obj, si, None)
         return obj
@@ -261,7 +261,13 @@ class OutputStream(Base):
 
 
 def combine(*blocks, si=None):
-    return type(blocks[0]).combine(*blocks, si=si)
+    if si is None:
+        return type(blocks[0]).combine(*blocks, si=si)
+    else:
+        if len(blocks) == 0:
+            return make_empty(si)
+        else:
+            return si.db_type.combine(*blocks, si=si)
 
 
 def make_empty(si):

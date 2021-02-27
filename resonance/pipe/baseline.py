@@ -19,7 +19,9 @@ class baseline(Processor):
             raise Exception("BaseLine processor: the number of samples for averaging should not exceed the length of "
                             "the window.")
 
-        self._si = si.Window(channels=input_stream.SI.channels, samples=input_stream.SI.samples, samplingRate=input_stream.SI.samplingRate)
+        self._si = si.Window(channels=input_stream.SI.channels,
+                             samples=input_stream.SI.samples,
+                             samplingRate=input_stream.SI.samplingRate)
         self._averaging_window = slice(begin_offset, end_offset+1)
 
         return self._si

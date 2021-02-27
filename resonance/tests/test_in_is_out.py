@@ -51,3 +51,16 @@ class TestInIsOut(unittest.TestCase):
             db.Event(e_si, 125, {'a': 'b'}),
         ]
         self.check(e_si, blocks)
+
+    def test_events_only_numeric(self):
+        e_si = si.Event()
+        blocks = []
+        self.check(e_si, blocks)
+
+        blocks = [
+            db.make_empty(e_si),
+            db.Event(e_si, 10, 1.2),
+            db.Event(e_si, 40, 2.2),
+            db.Event(e_si, 80, 3.3)
+        ]
+        self.check(e_si, blocks)
