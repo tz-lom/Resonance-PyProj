@@ -122,6 +122,7 @@ class TestPipeFilter(TestProcessor):
         with self.assertRaises(Exception):
             resonance.pipe.filter(self.db, [1, 2, 3])
 
+
     def test_multiple_blocks(self):
         data = resonance.db.Channels(self.si, self.time*2, self.db)
         self.check_processor([self.si], [self.db, data], {'out_0': [self.expected, self.expected_2nd_block]}, resonance.pipe.filter, self.ba)
