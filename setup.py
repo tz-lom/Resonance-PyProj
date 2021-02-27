@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='resonance',
-    version='1.0',
+    version='1.0.1',
     packages=find_packages(),
     url='',
     license='',
@@ -11,6 +11,7 @@ setup(
     description='',
     install_requires=[
         'numpy',
-        'scipy'
+        'scipy',
+        'numpy_ringbuffer'
     ]
 )
