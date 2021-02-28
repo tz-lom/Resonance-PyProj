@@ -3,8 +3,7 @@ package:
   version: {{ GIT_VERSION }}  # git describe --tags --abbrev=0
 
 source:
-  git_url: https://github.com/tz-lom/Resonance-PyProj.git
-  git_rev: {{ GIT_COMMIT_ID }}  # git describe --tags --abbrev=0
+  path: ../
 
 build:
   number: {{ GIT_BUILD_NUMBER }}  # git rev-list  `git rev-list --tags --no-walk --max-count=1`..HEAD --count
@@ -13,7 +12,11 @@ build:
 requirements:
   build:
     - python
+    - pip
     - setuptools
+    - numpy
+    - numpy_ringbuffer
+    - scipy
   run:
     - numpy
     - numpy_ringbuffer
