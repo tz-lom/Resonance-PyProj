@@ -13,7 +13,7 @@ requirements:
   build:
     - python
     - pip
-    - setuptools-scm
+    - setuptools-git
     - numpy
     - numpy_ringbuffer
     - scipy
