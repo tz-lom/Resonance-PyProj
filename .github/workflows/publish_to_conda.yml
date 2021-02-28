@@ -19,3 +19,4 @@ jobs:
         AnacondaToken: ${{ secrets.ANACONDA_TOKEN }}
         platforms: 'win osx linux'
         channels: 'conda-forge bcilab'
+        target_channel: 'bcilab'
