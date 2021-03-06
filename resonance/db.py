@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import filterfalse
 from typing import Optional
+import numbers
 
 
 def si_from_blocks(*blocks, si=None):
@@ -54,8 +55,10 @@ class Event(Base, np.chararray):
             obj = np.empty(1, dtype=np.object).view(Event)
             obj[0] = message
 
-        if isinstance(ts, float) or isinstance(ts, int):
+        if isinstance(ts, numbers.Number):
             ts = np.asarray([ts], dtype=np.int64)
+        else:
+            ts = np.asarray(ts, dtype=np.int64)
 
         Base.__new__(obj, si, ts)
         return obj
@@ -65,13 +68,15 @@ class Event(Base, np.chararray):
 
     def __eq__(self, other):
         if isinstance(other, Event):
-            return (self._si == other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+            return (self._si == other._si) and np.array_equal(
+                self._ts, other._ts) and np.array_equal(self, other)
         else:
             return np.array_equal(self[0], other)
 
     def is_similar(self, other):
         if isinstance(other, Event):
-            return self._si.is_similar(other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+            return self._si.is_similar(other._si) and np.array_equal(
+                self._ts, other._ts) and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
 
@@ -101,8 +106,13 @@ class Channels(Base, np.ndarray):
         if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
             obj = obj.reshape((int(obj.size / si.channels), si.channels))
 
-        if isinstance(ts, int) or isinstance(ts, float):
-            ts = np.asarray(ts - np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate, dtype=np.int64)
+        if isinstance(ts, numbers.Number):
+            ts = np.asarray(
+                ts -
+                np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate,
+                dtype=np.int64)
+        else:
+            ts = np.asarray(ts, dtype=np.int64)
 
         Base.__new__(obj, si, ts)
         return obj
@@ -112,13 +122,15 @@ class Channels(Base, np.ndarray):
 
     def __eq__(self, other):
         if isinstance(other, Channels):
-            return (self._si == other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+            return (self._si == other._si) and np.array_equal(
+                self._ts, other._ts) and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
 
     def is_similar(self, other):
         if isinstance(other, Channels):
-            return self._si.is_similar(other._si) and np.array_equal(self._ts, other._ts) and np.array_equal(self, other)
+            return self._si.is_similar(other._si) and np.array_equal(
+                self._ts, other._ts) and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
 
@@ -177,9 +189,10 @@ class SingleWindow(np.ndarray):
 
 
 class Window(Base, np.ndarray):
-    def __new__(cls, si, ts, data, metadata:any = None):
+    def __new__(cls, si, ts, data, metadata: any = None):
 
-        if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(data[0], SingleWindow):
+        if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(
+                data[0], SingleWindow):
             obj = data.view(Window)
             Base.__new__(obj, si, None)
             return obj
@@ -197,12 +210,13 @@ class Window(Base, np.ndarray):
                 raise Exception("Invalid window size")
 
             if not isinstance(ts, np.ndarray):
-                ts = ts - np.flip(np.arange(0, np.size(data, 0))) * 1E9 / si.samplingRate
+                ts = ts - np.flip(np.arange(0, np.size(
+                    data, 0))) * 1E9 / si.samplingRate
 
             ts = np.array(ts, dtype=np.int64)
 
             window = SingleWindow(ts, data, metadata)
-            obj = np.ndarray((1,), dtype=object).view(Window)
+            obj = np.ndarray((1, ), dtype=object).view(Window)
             obj[0] = window
 
             Base.__new__(obj, si, None)

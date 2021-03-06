@@ -1,5 +1,6 @@
 import resonance.si as si
 import resonance.db as db
+import numpy as np
 from resonance.internal import declare_transformation, Processor
 
 
@@ -16,9 +17,7 @@ class transform_to_event(Processor):
 
     def online(self, input):
         return db.combine(
-            db.make_empty(self._si),
-            *[
-                db.Event(self._si, block.TS[0:1], self._transform(block))
-                for block in input
-            ]
-        )
+            db.make_empty(self._si), *[
+                db.Event(self._si, block.TS[0],
+                         self._transform(np.asarray(block))) for block in input
+            ])
