@@ -33,7 +33,7 @@ class ExecutionStep:
             .format(self.inputs, self.outputs, self.call)
 
     def has_input(self, si):
-        return si in self.inputs;
+        return si in self.inputs
 
 
 execution_plan = ExecutionPlan()
@@ -50,6 +50,7 @@ def pop_queue():
     ret = queue
     queue = []
     return ret
+
 
 add_to_queue = _add_to_queue
 
@@ -74,7 +75,8 @@ class Processor:
     def call(self, *inputs):
         outputs_si = self.prepare(*inputs)
 
-        data_streams = list(filter(lambda x: isinstance(x, DataBlockBase), inputs))
+        data_streams = list(
+            filter(lambda x: isinstance(x, DataBlockBase), inputs))
 
         if data_streams[0].SI.online:
             # @todo: do all execution plan related stuff
@@ -82,11 +84,9 @@ class Processor:
             global execution_plan
             id = data_streams[0].SI.id
             input_si = list(
-                map(
-                    lambda x: x.SI,
-                    filter(
-                        lambda x: isinstance(x, resonance.db.Base),
-                        inputs)))
+                map(lambda x: x.SI,
+                    filter(lambda x: isinstance(x, resonance.db.Base),
+                           inputs)))
 
             # @todo: this could be either "array" or si object
             outputs_si._id = execution_plan.next_stream_id
@@ -102,6 +102,7 @@ class Processor:
             else:
                 return self.offline(*data_streams)
 
+
 @declare_transformation
 class create_output(Processor):
     def __init__(self):
@@ -109,25 +110,44 @@ class create_output(Processor):
         self._stream_si = None
         self._callback = None
 
-    def _send_np_based(self, data: resonance.db.Channels):
+    def _send_data(self, data):
         add_to_queue('sendBlockToStream', (self._si, data))
+        return resonance.db.OutputStream(self._si)
+
+    def _send_channels(self, data: resonance.db.Channels):
+        if np.size(data, 1) > 0:
+            add_to_queue('sendBlockToStream', (self._si, data))
+        return resonance.db.OutputStream(self._si)
+
+    def _send_event(self, data: resonance.db.Event):
+        if len(data) > 0:
+            for i in range(data.shape[0]):
+                add_to_queue('sendBlockToStream', (self._si, data[i:i + 1]))
+        return resonance.db.OutputStream(self._si)
+
+    def _send_window(self, data: resonance.db.Window):
+        if len(data) > 0:
+            for i in range(data.shape[0]):
+                add_to_queue('sendBlockToStream', (self._si, data[i:i + 1]))
         return resonance.db.OutputStream(self._si)
 
     def prepare(self, stream: resonance.db.Base, name: str):
         global execution_plan
 
-        id = execution_plan.next_output_id
+        sid = execution_plan.next_output_id
         execution_plan.next_output_id += 1
 
-        if isinstance(stream.SI, resonance.si.Channels) or\
-                isinstance(stream.SI, resonance.si.Event) or\
-                isinstance(stream.SI, resonance.si.Window):
-            self._callback = self._send_np_based
-            self._si = resonance.si.OutputStream(id, name, stream.SI)
-            self._stream_si = stream.SI
-            add_to_queue('createOutputStream', self._si)
+        if isinstance(stream.SI, resonance.si.Channels):
+            self._callback = self._send_data
+        elif isinstance(stream.SI, resonance.si.Event):
+            self._callback = self._send_data
+        elif isinstance(stream.SI, resonance.si.Window):
+            self._callback = self._send_data
         else:
             raise Exception("Unsupported stream type")
+        self._si = resonance.si.OutputStream(sid, name, stream.SI)
+        self._stream_si = stream.SI
+        add_to_queue('createOutputStream', self._si)
         return self._si
 
     def online(self, data: resonance.db.Base):

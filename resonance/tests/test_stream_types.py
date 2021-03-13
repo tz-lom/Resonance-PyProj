@@ -44,7 +44,8 @@ class TestChannels(unittest.TestCase):
         same = db.Channels(c_si, timeoption2ts(c_si, time), data)
         self.assertEqual(origin, same)
 
-        different_size = db.Channels(c_si, timeoption2ts(c_si, time), data.repeat(2))
+        different_size = db.Channels(c_si, timeoption2ts(c_si, time),
+                                     data.repeat(2))
         self.assertNotEqual(origin, different_size)
 
         different_time = db.Channels(c_si, timeoption2ts(c_si, time * 2), data)
@@ -55,7 +56,8 @@ class TestChannels(unittest.TestCase):
         self.assertNotEqual(origin, different_si)
 
         offset = 10
-        same_by_calc = db.Channels(c_si, timeoption2ts(c_si, time), data + offset)
+        same_by_calc = db.Channels(c_si, timeoption2ts(c_si, time),
+                                   data + offset)
         self.assertNotEqual(origin, same_by_calc)
         same_by_calc -= offset
         self.assertEqual(origin, same_by_calc)
@@ -99,7 +101,7 @@ class TestChannels(unittest.TestCase):
         d = db.make_empty(c_si)
 
         self.assertEqual(d.shape, (0, 5))
-        self.assertEqual(d.TS.shape, (0,))
+        self.assertEqual(d.TS.shape, (0, ))
         self.assertEqual(d.SI, c_si)
 
     def test_timestamp_subset(self):
@@ -150,10 +152,13 @@ class TestEvents(unittest.TestCase):
         e_si = si.Event()
 
         # event test
-        events = [db.Event(e_si, 3, "a"),
-                  db.Event(e_si, 5, "b"),
-                  db.Event.make_empty(e_si),
-                  db.Event(e_si, 12, "c")]
+        events = [
+            db.Event.make_empty(e_si),
+            db.Event(e_si, 3, "a"),
+            db.Event(e_si, 5, "b"),
+            db.Event.make_empty(e_si),
+            db.Event(e_si, 12, "c")
+        ]
 
         result = db.combine(*events)
 
@@ -164,8 +169,7 @@ class TestEvents(unittest.TestCase):
         self.assertEqual(result.SI, e_si)
 
         # event empty test
-        empty_events = [db.Event.make_empty(e_si),
-                       db.Event.make_empty(e_si)]
+        empty_events = [db.Event.make_empty(e_si), db.Event.make_empty(e_si)]
 
         empty_events_result = db.combine(*empty_events)
 
@@ -189,7 +193,6 @@ class TestEvents(unittest.TestCase):
 
 
 class TestWindow(unittest.TestCase):
-
     def test_window_construct_from_other(self):
         time = 3
         channels = 2
@@ -253,4 +256,11 @@ class TestWindow(unittest.TestCase):
 
         self.assertEqual(A, B)
 
+    def test_window_slice(self):
+        w_si = si.Window(3, 7, 100)
+        wnd1 = db.Window(w_si, 1e9, np.arange(1, 22).reshape((7, 3)))
+        wnd2 = db.Window(w_si, 2e9, np.arange(23, 44).reshape((7, 3)))
 
+        wnd = db.combine(wnd1, wnd2)
+
+        self.assertEqual(wnd1, wnd[0:1])

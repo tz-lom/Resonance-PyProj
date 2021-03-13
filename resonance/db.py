@@ -12,7 +12,7 @@ def si_from_blocks(*blocks, si=None):
     return si
 
 
-class Base:
+class Base(np.ndarray):
     def __new__(cls, si, timestamp: Optional[np.ndarray], *kargs):
         cls._si = si
         cls._ts = timestamp
@@ -37,30 +37,24 @@ class Base:
         self._si = getattr(obj, '_si', None)
         self._ts = getattr(obj, '_ts', None)
 
-    def __getitem__(self, item):
-        ret = np.ndarray.__getitem__(self, item)
-        if hasattr(ret, '_ts') and not self._ts is None:
-            if isinstance(item, tuple):
-                ret._ts = self._ts[item[0]]
-            elif isinstance(item, list) or isinstance(item, slice):
-                ret._ts = self._ts[item]
+    def __getitem__(self, index):
+        if not isinstance(index, tuple):
+            index = (index, )
+        ret = np.ndarray.__getitem__(self, index)
+        if isinstance(ret, type(self)) and self._ts is not None:
+            ret._ts = self._ts[index[0]]
         return ret
 
 
-class Event(Base, np.chararray):
+class Event(Base):
     def __new__(cls, si, ts, message):
-        if isinstance(message, np.ndarray):
-            obj = np.array(message, dtype=np.object).view(Event)
-        else:
-            obj = np.empty(1, dtype=np.object).view(Event)
-            obj[0] = message
+        obj = np.empty(1, dtype=np.object).view(Event)
+        obj[0] = message
 
-        if isinstance(ts, numbers.Number):
-            ts = np.asarray([ts], dtype=np.int64)
-        else:
-            ts = np.asarray(ts, dtype=np.int64)
+        timestamp = np.empty(1, dtype=np.int64)
+        timestamp[0] = ts
 
-        Base.__new__(obj, si, ts)
+        Base.__new__(obj, si, timestamp)
         return obj
 
     def __ne__(self, other):
@@ -90,16 +84,19 @@ class Event(Base, np.chararray):
     @staticmethod
     def combine(*blocks, si=None):
         si = si_from_blocks(*blocks, si=si)
-        message = np.concatenate(blocks)
-        if len(message) > 0:
+        if len(blocks) > 1:
+            obj = np.concatenate(blocks).view(Event)
+        else:
+            obj = blocks[0]
+        if len(blocks) > 0:
             ts = np.concatenate(list(map(lambda x: x.TS, blocks)))
         else:
             ts = np.empty(0, dtype=np.int64)
+        Base.__new__(obj, si, ts)
+        return obj
 
-        return Event(si, ts, message)
 
-
-class Channels(Base, np.ndarray):
+class Channels(Base):
     def __new__(cls, si, ts, data):
         obj = np.array(data, ndmin=2).view(Channels)
 
@@ -150,9 +147,12 @@ class Channels(Base, np.ndarray):
 
 
 class SingleWindow(np.ndarray):
-    def __new__(cls, ts: np.ndarray, data: np.ndarray, metadata: any = None):
+    def __new__(cls,
+                timestamps: np.ndarray,
+                data: np.ndarray,
+                metadata: any = None):
         obj = data.view(SingleWindow)
-        obj._ts = ts
+        obj._timestamps = timestamps
         obj._metadata = metadata
         return obj
 
@@ -161,14 +161,14 @@ class SingleWindow(np.ndarray):
 
     def __eq__(self, other):
         if isinstance(other, SingleWindow):
-            return np.array_equal(self._ts, other._ts) \
+            return np.array_equal(self._timestamps, other._timestamps) \
                    and np.array_equal(self, other) \
                    and np.array_equal(self.metadata, other.metadata)
         else:
             return np.array_equal(self, other)
 
     def __array_finalize__(self, obj):
-        self._ts = getattr(obj, '_ts', None)
+        self._timestamps = getattr(obj, '_timestamps', None)
         self._metadata = getattr(obj, '_metadata', None)
 
     @property
@@ -180,15 +180,15 @@ class SingleWindow(np.ndarray):
         self._metadata = value
 
     @property
-    def TS(self):
-        return self._ts
+    def timestamps(self):
+        return self._timestamps
 
-    @TS.setter
+    @timestamps.setter
     def TS(self, ts):
-        self._ts = ts
+        self._timestamps = ts
 
 
-class Window(Base, np.ndarray):
+class Window(Base):
     def __new__(cls, si, ts, data, metadata: any = None):
 
         if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(
@@ -263,13 +263,13 @@ class Window(Base, np.ndarray):
 
 class OutputStream(Base):
     def __new__(cls, si):
-        obj = object.__new__(cls)
+        obj = np.empty(0, dtype=object).view(OutputStream)
         Base.__new__(obj, si, None)
         return obj
 
     @staticmethod
     def make_empty(si):
-        obj = np.empty(0, dtype=object).view(Window)
+        obj = np.empty(0, dtype=object).view(OutputStream)
         Base.__new__(obj, si, None)
         return obj
 
