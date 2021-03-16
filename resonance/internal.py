@@ -60,7 +60,7 @@ def reset():
     execution_plan = ExecutionPlan()
 
 
-def declare_transformation(operator):
+def declare_transformation(operator: object) -> object:
     if not issubclass(operator, Processor):
         raise Exception
 

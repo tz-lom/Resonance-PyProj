@@ -5,31 +5,35 @@ import numpy as np
 import copy
 
 
-@declare_transformation
-class baseline(Processor):
+def baseline(input_stream: db.Window, averaging_window: slice = slice(None)):
+    """
+    Return db.Window with baselined data.
 
-    def prepare(self, input_stream, begin_offset, end_offset):
-        if not isinstance(input_stream, db.Window):
-            raise Exception("BaseLine processor: received data block is not a window.")
+    Baseline is calculated per channel as mean of values in slice specified by averaging_window.
+    Baseline value is calculated for each window separately.
 
-        if input_stream.SI.samples < begin_offset:
-            raise Exception("BaseLine processor: offset value should not exceed the length of the window.")
+    :param input_stream: input stream of db.Window type
+    :param averaging_window: slice of the window which will be used to calculate mean value default is the full window
+    """
+    class Impl(Processor):
+        def prepare(self, input_stream: db.Window, averaging_window: slice):
 
-        if (input_stream.SI.samples < end_offset) or (begin_offset < -input_stream.SI.samples):
-            raise Exception("BaseLine processor: the number of samples for averaging should not exceed the length of "
-                            "the window.")
+            if not isinstance(input_stream, db.Window):
+                raise Exception("baseline: input_stream is not a window")
 
-        self._si = si.Window(channels=input_stream.SI.channels,
-                             samples=input_stream.SI.samples,
-                             samplingRate=input_stream.SI.samplingRate)
-        self._averaging_window = slice(begin_offset, end_offset+1)
+            self._si = si.Window(channels=input_stream.SI.channels,
+                                 samples=input_stream.SI.samples,
+                                 samplingRate=input_stream.SI.samplingRate)
+            self._averaging_window = averaging_window
 
-        return self._si
+            return self._si
 
-    def online(self, input_stream):
-        windows = copy.deepcopy(input_stream)
-        for window in windows:
-            window -= np.mean(window[self._averaging_window, :], axis=0)
+        def online(self, input_stream):
+            windows = copy.deepcopy(input_stream)
+            for window in windows:
+                window -= np.mean(window[self._averaging_window, :], axis=0)
 
-        return db.Window(self._si, None, windows)
+            return db.Window(self._si, None, windows)
 
+    x = Impl()
+    return x.call(input_stream, averaging_window)
