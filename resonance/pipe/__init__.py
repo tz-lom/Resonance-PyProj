@@ -4,3 +4,4 @@ from resonance.pipe.nothing import nothing
 from resonance.pipe.baseline import baseline
 from resonance.pipe.transform_channels import transform_channels
 from resonance.pipe.transform_to_event import transform_to_event
+from .filter_event import filter_event

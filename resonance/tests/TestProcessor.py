@@ -57,7 +57,13 @@ class TestProcessor(unittest.TestCase):
 
         self.__assertResults(expected, results, msg, channel_comparison)
 
-    def check_processor(self, si, blocks, expected, processor, *arguments):
+    def check_processor(self,
+                        si,
+                        blocks,
+                        expected,
+                        processor,
+                        *arguments,
+                        only_offline=False):
         def code():
             inputs = [resonance.input(idx) for idx in range(0, len(si))]
             args = inputs + list(arguments)
@@ -70,33 +76,34 @@ class TestProcessor(unittest.TestCase):
 
         if isinstance(expected, Exception):
             try:
-                resonance.run.online(si, blocks, code)
+                resonance.run.offline(si, blocks, code)
             except expected as error:
-                online_error = error
+                offline_error = error
             except Exception as error:
                 self.fail(
-                    "Was expecting exception {} in run.online, but got {}".
+                    "Was expecting exception {} in run.offline, but got {}".
                     format(expected, error))
             else:
                 self.fail(
-                    "Was expecting exception {}, but got no exception".format(
-                        expected))
+                    "Was expecting exception {} in run.offline, but got no exception"
+                    .format(expected))
 
-            try:
-                resonance.run.online(si, blocks, code)
-            except expected as error:
-                self.assertEqual(
-                    error, online_error,
-                    "Exception from online ({}) is not the same as from offline ({})"
-                    .format(online_error, error))
-            except Exception as error:
-                self.fail(
-                    "Was expecting exception {} in run.online, but got {}".
-                    format(expected, error))
-            else:
-                self.fail(
-                    "Was expecting exception {}, but got no exception".format(
-                        expected))
+            if not only_offline:
+                try:
+                    resonance.run.online(si, blocks, code)
+                except expected as error:
+                    self.assertEqual(
+                        error, offline_error,
+                        "Exception from run.online ({}) is not the same as from run.offline ({})"
+                        .format(offline_error, error))
+                except Exception as error:
+                    self.fail(
+                        "Was expecting exception {} in run.online, but got {}".
+                        format(expected, error))
+                else:
+                    self.fail(
+                        "Was expecting exception {} in run.online, but got no exception"
+                        .format(expected))
         else:
             blocks_copy = copy.deepcopy(blocks)
 
@@ -106,22 +113,28 @@ class TestProcessor(unittest.TestCase):
                 "Processor should return new blocks, not modify the input ones"
             )
 
-            online = resonance.run.online(si,
-                                          blocks_copy,
-                                          code,
-                                          return_blocks=True)
-            self.assertListEqual(
-                blocks, blocks_copy,
-                "Processor should return new blocks, not modify the input ones"
-            )
-
-            self.__assertResultsOnline(
-                expected, online, "Online did not match the expectations")
-
-            online_merged = {
+            expected_merged = {
                 name: resonance.db.combine(*values)
-                for name, values in online.items()
+                for name, values in expected.items()
             }
 
-            self.__assertResultsOffline(online_merged, offline,
-                                        "Offline not equals online")
+            self.__assertResultsOffline(expected_merged, offline,
+                                        "Offline did not match expectations")
+
+            if not only_offline:
+                online = resonance.run.online(si,
+                                              blocks_copy,
+                                              code,
+                                              return_blocks=True)
+                self.assertListEqual(
+                    blocks, blocks_copy,
+                    "Processor should return new blocks, not modify the input ones"
+                )
+
+                self.__assertResultsOnline(
+                    expected, online, "Online did not match the expectations")
+
+                online_merged = resonance.run.online(si, blocks_copy, code)
+
+                self.__assertResultsOffline(
+                    online_merged, offline, "Offline not equals online merged")
