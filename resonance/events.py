@@ -30,19 +30,13 @@ def on_stop():
     pass
 
 
-def on_prepare(code, descriptions):
-    internal.reset()
-    internal.execution_plan.inputs_data = list(map(db.make_empty, descriptions))
-    internal.execution_plan.next_stream_id = len(descriptions) + 1
+def on_prepare(code, inputs):
+    internal.execution_plan.reset(inputs)
 
-    def plan_input(index):
-        return internal.execution_plan.inputs_data[index]
-
-    resonance.__input = plan_input
+    resonance.__input = internal.execution_plan.input_by_index
     resonance.__createOutput = resonance.internal.create_output
 
     if callable(code):
         code()
     else:
         exec(code)
-

@@ -6,20 +6,39 @@ import typing
 
 class ExecutionPlan:
     def __init__(self):
-        self.plan = {}
-        self.inputs_data = []
-        self.next_output_id = 1
-        self.next_stream_id = 1
+        self._plan = {}
+        self._inputs_data = []
+        self._next_output_id = 1
+        self._next_stream_id = 1
 
     def __repr__(self):
         return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}"\
-            .format(self.plan, self.inputs_data, self.next_output_id, self.next_stream_id)
+            .format(self._plan, self._inputs_data, self._next_output_id, self._next_stream_id)
 
     def get_node_by_input(self, si):
-        for step in self.plan.values():
+        for step in self._plan.values():
             if step.has_input(si):
                 return step
         return None
+
+    def reset(self, inputs):
+        self._inputs_data = list(map(resonance.db.make_empty, inputs))
+        self._next_stream_id = len(inputs) + 100
+
+    def input_by_index(self, index):
+        return self._inputs_data[index]
+
+    def next_output_id(self):
+        ret = self._next_output_id
+        self._next_output_id += 1
+        return ret
+
+    def add_step(self, input_si, output_si, callback):
+        idx = input_si[0].id
+        output_si._id = self._next_stream_id
+        self._next_stream_id += 1
+        output_si.online = True
+        self._plan[idx] = ExecutionStep(input_si, output_si, callback)
 
 
 class ExecutionStep:
@@ -60,7 +79,7 @@ def reset():
     execution_plan = ExecutionPlan()
 
 
-def declare_transformation(operator: object) -> object:
+def declare_transformation(operator: type) -> object:
     if not issubclass(operator, Processor):
         raise Exception
 
@@ -77,23 +96,14 @@ class Processor:
 
         data_streams = list(
             filter(lambda x: isinstance(x, DataBlockBase), inputs))
-
+        assert len(data_streams) > 0
         if data_streams[0].SI.online:
-            # @todo: do all execution plan related stuff
+            assert all(map(lambda s: s.SI.online, data_streams))
+
+            input_si = list(map(lambda s: s.SI, data_streams))
 
             global execution_plan
-            id = data_streams[0].SI.id
-            input_si = list(
-                map(lambda x: x.SI,
-                    filter(lambda x: isinstance(x, resonance.db.Base),
-                           inputs)))
-
-            # @todo: this could be either "array" or si object
-            outputs_si._id = execution_plan.next_stream_id
-            execution_plan.next_stream_id += 1
-            outputs_si.online = True
-
-            execution_plan.plan[id] = ExecutionStep(input_si, outputs_si, self)
+            execution_plan.add_step(input_si, outputs_si, self)
 
             return resonance.db.make_empty(outputs_si)
         else:
@@ -134,8 +144,7 @@ class create_output(Processor):
     def prepare(self, stream: resonance.db.Base, name: str):
         global execution_plan
 
-        sid = execution_plan.next_output_id
-        execution_plan.next_output_id += 1
+        sid = execution_plan.next_output_id()
 
         if isinstance(stream.SI, resonance.si.Channels):
             self._callback = self._send_data
