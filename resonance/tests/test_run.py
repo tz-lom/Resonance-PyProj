@@ -16,7 +16,6 @@ from resonance import *
 createOutput(input(0), 'foo')
 '''
 
-
     def test_transformation_is_callable(self):
         t = pipe.spatial
         self.assertTrue(callable(t))
@@ -44,3 +43,21 @@ createOutput(input(0), 'foo')
         results = run.offline([self._si], [self._db], call)
         self.assertEqual(results, {'func': self._db})
 
+
+class TestBranchedTransformation(unittest.TestCase):
+    def setUp(self):
+        self._si = si.Channels(2, 20)
+        self._db = db.Channels(self._si, 300, np.arange(1, 27))
+        self._code = '''
+from resonance import *
+createOutput(input(0), 'foo')
+createOutput(input(0), 'bar')
+'''
+
+    def test_run_offline(self):
+        results = run.offline([self._si], [self._db], self._code)
+        self.assertEqual(results, {'foo': self._db, 'bar': self._db})
+
+    def test_run_online(self):
+        results = run.online([self._si], [self._db], self._code)
+        self.assertEqual(results, {'foo': self._db, 'bar': self._db})
