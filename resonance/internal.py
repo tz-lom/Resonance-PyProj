@@ -6,7 +6,7 @@ import typing
 
 class ExecutionPlan:
     def __init__(self):
-        self._plan = {}
+        self._plan = []
         self._inputs_data = []
         self._next_output_id = 0
         self._next_stream_id = 0
@@ -16,14 +16,11 @@ class ExecutionPlan:
         return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}" \
             .format(self._plan, self._inputs_data, self._next_output_id, self._next_stream_id)
 
-    def get_node_by_input(self, si):
-        for step in self._plan.values():
-            if step.has_input(si):
-                return step
-        return None
+    def steps_for_input(self, si):
+        return [step for step in self._plan if step.has_input(si)]
 
     def reset(self, inputs):
-        self._plan = {}
+        self._plan = []
         self._inputs_data = list(map(resonance.db.make_empty, inputs))
         self._next_output_id = 1
         self._next_stream_id = len(inputs) + 100
@@ -40,7 +37,7 @@ class ExecutionPlan:
         output_si._id = self._next_stream_id
         self._next_stream_id += 1
         output_si.online = True
-        self._plan[input_si[0].id] = ExecutionStep(input_si, output_si, callback)
+        self._plan.append(ExecutionStep(input_si, output_si, callback))
 
 
 class ExecutionStep:
