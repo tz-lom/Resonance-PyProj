@@ -8,11 +8,12 @@ class ExecutionPlan:
     def __init__(self):
         self._plan = {}
         self._inputs_data = []
-        self._next_output_id = 1
-        self._next_stream_id = 1
+        self._next_output_id = 0
+        self._next_stream_id = 0
+        self.reset([])
 
     def __repr__(self):
-        return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}"\
+        return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}" \
             .format(self._plan, self._inputs_data, self._next_output_id, self._next_stream_id)
 
     def get_node_by_input(self, si):
@@ -22,7 +23,9 @@ class ExecutionPlan:
         return None
 
     def reset(self, inputs):
+        self._plan = {}
         self._inputs_data = list(map(resonance.db.make_empty, inputs))
+        self._next_output_id = 1
         self._next_stream_id = len(inputs) + 100
 
     def input_by_index(self, index):
@@ -34,11 +37,10 @@ class ExecutionPlan:
         return ret
 
     def add_step(self, input_si, output_si, callback):
-        idx = input_si[0].id
         output_si._id = self._next_stream_id
         self._next_stream_id += 1
         output_si.online = True
-        self._plan[idx] = ExecutionStep(input_si, output_si, callback)
+        self._plan[input_si[0].id] = ExecutionStep(input_si, output_si, callback)
 
 
 class ExecutionStep:
@@ -48,7 +50,7 @@ class ExecutionStep:
         self.call = call
 
     def __repr__(self):
-        return "ExecutionStep\ninputs={}\noutputs={}\ncall={}"\
+        return "ExecutionStep\ninputs={}\noutputs={}\ncall={}" \
             .format(self.inputs, self.outputs, self.call)
 
     def has_input(self, si):
