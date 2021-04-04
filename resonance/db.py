@@ -1,6 +1,6 @@
 import numpy as np
 from itertools import filterfalse
-from typing import Optional
+from typing import Optional, Any
 import numbers
 import resonance.si
 
@@ -157,7 +157,7 @@ class SingleWindow(np.ndarray):
     def __new__(cls,
                 timestamps: np.ndarray,
                 data: np.ndarray,
-                metadata: any = None):
+                metadata: Any = None):
         obj = data.view(SingleWindow)
         obj._timestamps = timestamps
         obj._metadata = metadata
@@ -191,12 +191,12 @@ class SingleWindow(np.ndarray):
         return self._timestamps
 
     @timestamps.setter
-    def TS(self, ts):
+    def timestamps(self, ts):
         self._timestamps = ts
 
 
 class Window(Base):
-    def __new__(cls, si: resonance.si.Window, ts, data, metadata: any = None):
+    def __new__(cls, si: resonance.si.Window, ts, data, metadata: Any = None):
 
         if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(
                 data[0], SingleWindow):
@@ -252,7 +252,7 @@ class Window(Base):
 
     @property
     def TS(self):
-        return np.asarray([window.TS[-1] for window in self], dtype=np.int64)
+        return np.asarray([window.timestamps[-1] for window in self], dtype=np.int64)
 
     @staticmethod
     def combine(*blocks, si=None):

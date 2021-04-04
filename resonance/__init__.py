@@ -5,7 +5,6 @@ try:
 
     import resonance.events as events
     import resonance.si as si
-    import resonance.state
     import resonance.internal
 
     resonate.register_callbacks(events.on_prepare, events.on_data_block,
@@ -20,12 +19,12 @@ except:
 from .split import split
 
 
-def __input(id):
+def __input(idx: int):
     raise Exception("Can't execute directly")
 
 
-def input(id):
-    return __input(id)
+def input(idx: int):
+    return __input(idx)
 
 
 def __createOutput(name: str, data: db.Base):
