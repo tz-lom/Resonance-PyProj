@@ -2,6 +2,7 @@ import numpy as np
 from itertools import filterfalse
 from typing import Optional
 import numbers
+import resonance.si
 
 
 def si_from_blocks(*blocks, si=None):
@@ -13,7 +14,7 @@ def si_from_blocks(*blocks, si=None):
 
 
 class Base(np.ndarray):
-    def __new__(cls, si, timestamp: Optional[np.ndarray], *kargs):
+    def __new__(cls, si: resonance.si.Base, timestamp: Optional[np.ndarray], *kargs):
         cls._si = si
         cls._ts = timestamp
 
@@ -39,15 +40,21 @@ class Base(np.ndarray):
 
     def __getitem__(self, index):
         if not isinstance(index, tuple):
-            index = (index, )
+            index = (index,)
         ret = np.ndarray.__getitem__(self, index)
         if isinstance(ret, type(self)) and self._ts is not None:
             ret._ts = self._ts[index[0]]
         return ret
 
+    def clone(self, new_si: None):
+        copy = np.copy(self)
+        if new_si is not None:
+            copy._si = new_si
+        return copy
+
 
 class Event(Base):
-    def __new__(cls, si, ts, message):
+    def __new__(cls, si: resonance.si.Event, ts, message):
         obj = np.empty(1, dtype=np.object).view(Event)
         obj[0] = message
 
@@ -97,7 +104,7 @@ class Event(Base):
 
 
 class Channels(Base):
-    def __new__(cls, si, ts, data):
+    def __new__(cls, si: resonance.si.Channels, ts, data):
         obj = np.array(data, ndmin=2).view(Channels)
 
         if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
@@ -189,7 +196,7 @@ class SingleWindow(np.ndarray):
 
 
 class Window(Base):
-    def __new__(cls, si, ts, data, metadata: any = None):
+    def __new__(cls, si: resonance.si.Window, ts, data, metadata: any = None):
 
         if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(
                 data[0], SingleWindow):
@@ -216,7 +223,7 @@ class Window(Base):
             ts = np.array(ts, dtype=np.int64)
 
             window = SingleWindow(ts, data, metadata)
-            obj = np.ndarray((1, ), dtype=object).view(Window)
+            obj = np.ndarray((1,), dtype=object).view(Window)
             obj[0] = window
 
             Base.__new__(obj, si, None)
@@ -262,7 +269,7 @@ class Window(Base):
 
 
 class OutputStream(Base):
-    def __new__(cls, si):
+    def __new__(cls, si: resonance.si.Base):
         obj = np.empty(0, dtype=object).view(OutputStream)
         Base.__new__(obj, si, None)
         return obj

@@ -10,7 +10,7 @@ class TestProcessor(unittest.TestCase):
         self.assertIsInstance(
             expected_block, resonance.db.Base,
             '{}: Type of expected {} should be inherited from resonance.db.Base'
-            .format(msg, name))
+                .format(msg, name))
         self.assertEqual(type(expected_block), type(result_block),
                          '{}: Different block type for {}'.format(msg, name))
         self.assertTrue(expected_block.SI.is_similar(result_block.SI),
@@ -68,7 +68,7 @@ class TestProcessor(unittest.TestCase):
             inputs = [resonance.input(idx) for idx in range(0, len(si))]
             args = inputs + list(arguments)
             outputs = processor(*args)
-            if isinstance(outputs, list):
+            if isinstance(outputs, tuple):
                 for idx, out in enumerate(outputs):
                     resonance.createOutput(out, 'out_{}'.format(idx))
             else:
@@ -82,11 +82,11 @@ class TestProcessor(unittest.TestCase):
             except Exception as error:
                 self.fail(
                     "Was expecting exception {} in run.offline, but got {}".
-                    format(expected, error))
+                        format(expected, error))
             else:
                 self.fail(
                     "Was expecting exception {} in run.offline, but got no exception"
-                    .format(expected))
+                        .format(expected))
 
             if not only_offline:
                 try:
@@ -95,15 +95,15 @@ class TestProcessor(unittest.TestCase):
                     self.assertEqual(
                         error, offline_error,
                         "Exception from run.online ({}) is not the same as from run.offline ({})"
-                        .format(offline_error, error))
+                            .format(offline_error, error))
                 except Exception as error:
                     self.fail(
                         "Was expecting exception {} in run.online, but got {}".
-                        format(expected, error))
+                            format(expected, error))
                 else:
                     self.fail(
                         "Was expecting exception {} in run.online, but got no exception"
-                        .format(expected))
+                            .format(expected))
         else:
             blocks_copy = copy.deepcopy(blocks)
 

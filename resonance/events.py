@@ -17,7 +17,11 @@ def on_data_block(block):
     for step in steps:
         args = list(map(prepare_input, step.inputs))
         result = step.call.online(*args)
-        on_data_block(result)
+        if isinstance(result, tuple):
+            for stream in result:
+                on_data_block(stream)
+        else:
+            on_data_block(result)
 
 
 def on_start():

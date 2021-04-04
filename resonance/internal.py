@@ -2,6 +2,7 @@ from resonance.db import Base as DataBlockBase
 import resonance.si
 import numpy as np
 import typing
+from collections import Sequence
 
 
 class ExecutionPlan:
@@ -33,10 +34,19 @@ class ExecutionPlan:
         self._next_output_id += 1
         return ret
 
-    def add_step(self, input_si, output_si, callback):
-        output_si._id = self._next_stream_id
+    def next_stream_id(self):
+        ret = self._next_stream_id
         self._next_stream_id += 1
-        output_si.online = True
+        return ret
+
+    def add_step(self, input_si, output_si, callback):
+        if isinstance(output_si, tuple):
+            for stream in output_si:
+                stream._id = self.next_stream_id()
+                stream.online = True
+        else:
+            output_si._id = self.next_stream_id()
+            output_si.online = True
         self._plan.append(ExecutionStep(input_si, output_si, callback))
 
 
@@ -102,9 +112,12 @@ class Processor:
             input_si = list(map(lambda s: s.SI, data_streams))
 
             global execution_plan
-            execution_plan.add_step(input_si, outputs_si, self)
 
-            return resonance.db.make_empty(outputs_si)
+            execution_plan.add_step(input_si, outputs_si, self)
+            if isinstance(outputs_si, tuple):
+                return tuple(map(resonance.db.make_empty, outputs_si))
+            else:
+                return resonance.db.make_empty(outputs_si)
         else:
             if getattr(self, 'offline', None) is None:
                 return self.online(*data_streams)

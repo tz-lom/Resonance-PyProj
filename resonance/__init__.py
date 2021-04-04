@@ -1,4 +1,5 @@
 import resonance.db as db
+
 try:
     import resonate
 
@@ -15,6 +16,8 @@ try:
 
 except:
     pass
+
+from .split import split
 
 
 def __input(id):

@@ -1,4 +1,5 @@
 import resonance.db as db
+from copy import deepcopy
 
 
 class Base:
@@ -28,6 +29,12 @@ class Base:
                     return False
 
         return True
+
+    def clone(self):
+        copy = deepcopy(self)
+        copy._id = None
+        copy._name = None
+        return copy
 
 
 class Channels(Base):
@@ -106,4 +113,3 @@ class OutputStream(Base):
     @property
     def source(self):
         return self._source
-
