@@ -19,7 +19,7 @@ class windowizer(Processor):
             raise Exception("input must be channels")
 
         self._si = si.Window(inp.SI.channels, size, inp.SI.samplingRate)
-        self._window = RingBuffer(size, dtype=(float, inp.SI.channels), allow_overwrite=True)
+        self._window = RingBuffer(size, dtype=(float, (inp.SI.channels,)), allow_overwrite=True)
         self._times = RingBuffer(size, dtype=np.int64, allow_overwrite=True)
         self._unfilled = size
         self._shift = shift

@@ -62,3 +62,15 @@ class TestPipeWindowizer(TestProcessor):
         self.check_processor([si], blocks,
                              {'out_0': [e_db1, e_db2, e_db3, resonance.db.make_empty(e_si)]},
                              resonance.pipe.windowizer, 2, 5)
+
+    def test_single_channel(self):
+        si = resonance.si.Channels(1, 1)
+        blocks = self.generate_channels_sequence(si, [7])
+
+        e_si = resonance.si.Window(1, 5, 1)
+        e_db1 = self.generate_window(e_si, 0)
+        e_db2 = self.generate_window(e_si, 1)
+        e_db3 = self.generate_window(e_si, 2)
+
+        self.check_processor([si], blocks, {'out_0': [resonance.db.combine(e_db1, e_db2, e_db3)]},
+                             resonance.pipe.windowizer, 5, 1)
