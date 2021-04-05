@@ -76,13 +76,13 @@ class Event(Base):
 
 
 class Window(Base):
-    def __init__(self, channels, samples, samplingRate, id=None, name=None):
+    def __init__(self, channels, samples, sampling_rate, id=None, name=None):
         Base.__init__(self, id, name)
         self._channels = channels
         self._samples = samples
-        self._samplingRate = samplingRate
+        self._samplingRate = sampling_rate
         self.db_type = db.Window
-        self._hash = hash((self._id, self._name, self._channels, self._samples, samplingRate))
+        self._hash = hash((self._id, self._name, self._channels, self._samples, sampling_rate))
 
     def __hash__(self):
         return self._hash

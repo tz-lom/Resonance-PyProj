@@ -3,6 +3,7 @@ import copy
 import resonance
 import resonance.run
 import numpy as np
+from typing import List
 
 
 class TestProcessor(unittest.TestCase):
@@ -138,3 +139,28 @@ class TestProcessor(unittest.TestCase):
 
                 self.__assertResultsOffline(
                     online_merged, offline, "Offline not equals online merged")
+
+    @staticmethod
+    def generate_channels_sequence(si: resonance.si.Channels, block_sizes: List[int], initial_sample: np.int64 = 0,
+                                   initial_ts: float = 0):
+        ts_step = 1e9 / si.samplingRate
+        blocks = []
+        offset = initial_sample
+        for samples in block_sizes:
+            blocks.append(
+                resonance.db.Channels(
+                    si,
+                    initial_ts + np.asarray(range(offset, offset + samples), dtype=np.int64) * ts_step,
+                    np.asarray(range(offset * si.channels, (offset + samples) * si.channels), dtype=float)
+                ))
+            offset += samples
+        return blocks
+
+    @staticmethod
+    def generate_window(si: resonance.si.Window, initial_sample: int = 0, initial_ts: np.int64 = 0):
+        ts_step = 1e9 / si.samplingRate
+        return resonance.db.Window(
+            si,
+            initial_ts + np.asarray(range(initial_sample, initial_sample + si.samples), dtype=np.int64) * ts_step,
+            np.asarray(range(initial_sample * si.channels, (initial_sample + si.samples) * si.channels), dtype=float)
+        )

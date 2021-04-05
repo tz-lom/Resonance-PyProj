@@ -15,6 +15,7 @@ def baseline(input_stream: db.Window, averaging_window: slice = slice(None)):
     :param input_stream: input stream of db.Window type
     :param averaging_window: slice of the window which will be used to calculate mean value default is the full window
     """
+
     class Impl(Processor):
         def prepare(self, input_stream: db.Window, averaging_window: slice):
 
@@ -23,7 +24,7 @@ def baseline(input_stream: db.Window, averaging_window: slice = slice(None)):
 
             self._si = si.Window(channels=input_stream.SI.channels,
                                  samples=input_stream.SI.samples,
-                                 samplingRate=input_stream.SI.samplingRate)
+                                 sampling_rate=input_stream.SI.samplingRate)
             self._averaging_window = averaging_window
 
             return self._si
