@@ -55,7 +55,7 @@ class Base(np.ndarray):
 
 class Event(Base):
     def __new__(cls, si: resonance.si.Event, ts, message):
-        obj = np.empty(1, dtype=np.object).view(Event)
+        obj = np.empty(1, dtype=object).view(Event)
         obj[0] = message
 
         timestamp = np.empty(1, dtype=np.int64)
@@ -293,3 +293,7 @@ def combine(*blocks, si=None):
 
 def make_empty(si):
     return si.db_type.make_empty(si)
+
+
+def sort_by_timestamp(blocks: list[Base]) -> list[Base]:
+    return sorted(blocks, key=lambda b: b.TS[0])
