@@ -1,8 +1,6 @@
 import numpy as np
-from itertools import filterfalse
-from typing import Optional, Any
+from typing import Optional, Any, List
 import numbers
-import resonance.si
 
 
 def si_from_blocks(*blocks, si=None):
@@ -14,7 +12,7 @@ def si_from_blocks(*blocks, si=None):
 
 
 class Base(np.ndarray):
-    def __new__(cls, si: resonance.si.Base, timestamp: Optional[np.ndarray], *kargs):
+    def __new__(cls, si, timestamp: Optional[np.ndarray], *kargs):
         cls._si = si
         cls._ts = timestamp
 
@@ -54,7 +52,7 @@ class Base(np.ndarray):
 
 
 class Event(Base):
-    def __new__(cls, si: resonance.si.Event, ts, message):
+    def __new__(cls, si, ts, message):
         obj = np.empty(1, dtype=object).view(Event)
         obj[0] = message
 
@@ -104,7 +102,7 @@ class Event(Base):
 
 
 class Channels(Base):
-    def __new__(cls, si: resonance.si.Channels, ts, data):
+    def __new__(cls, si, ts, data):
         obj = np.array(data, ndmin=2).view(Channels)
 
         if len(obj.shape) != 2 or np.size(obj, 1) != si.channels:
@@ -196,7 +194,7 @@ class SingleWindow(np.ndarray):
 
 
 class Window(Base):
-    def __new__(cls, si: resonance.si.Window, ts, data, metadata: Any = None):
+    def __new__(cls, si, ts, data, metadata: Any = None):
 
         if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(
                 data[0], SingleWindow):
@@ -269,7 +267,7 @@ class Window(Base):
 
 
 class OutputStream(Base):
-    def __new__(cls, si: resonance.si.Base):
+    def __new__(cls, si):
         obj = np.empty(0, dtype=object).view(OutputStream)
         Base.__new__(obj, si, None)
         return obj
@@ -295,5 +293,5 @@ def make_empty(si):
     return si.db_type.make_empty(si)
 
 
-def sort_by_timestamp(blocks: list[Base]) -> list[Base]:
+def sort_by_timestamp(blocks: List[Base]) -> List[Base]:
     return sorted(blocks, key=lambda b: b.TS[0])
