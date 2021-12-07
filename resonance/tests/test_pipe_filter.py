@@ -1,6 +1,7 @@
 from resonance.tests.TestProcessor import TestProcessor
-import resonance.pipe.filter
+import resonance.pipe.filters
 import numpy as np
+from scipy import signal
 
 
 class TestPipeFilter(TestProcessor):
@@ -122,11 +123,92 @@ class TestPipeFilter(TestProcessor):
         with self.assertRaises(Exception):
             resonance.pipe.filter(self.db, [1, 2, 3])
 
-
     def test_multiple_blocks(self):
         data = resonance.db.Channels(self.si, self.time*2, self.db)
         self.check_processor([self.si], [self.db, data], {'out_0': [self.expected, self.expected_2nd_block]}, resonance.pipe.filter, self.ba)
 
 
 
+class TestPipeSOSFilter(TestPipeFilter):
+    def setUp(self):
+        TestPipeFilter.setUp(self)
+        self.sos = np.asarray([
+            [ 6.37835424e-05,  6.37835424e-05,  0.00000000e+00,
+             1.00000000e+00, -9.27054679e-01,  0.00000000e+00],
+            [ 1.00000000e+00, -1.78848938e+00,  1.00000000e+00,
+                1.00000000e+00, -1.87008942e+00,  8.78235919e-01],
+            [ 1.00000000e+00, -1.93118487e+00,  1.00000000e+00,
+                1.00000000e+00, -1.90342568e+00,  9.17455718e-01],
+            [ 1.00000000e+00, -1.95799864e+00,  1.00000000e+00,
+                1.00000000e+00, -1.93318668e+00,  9.52433552e-01],
+            [ 1.00000000e+00, -1.96671846e+00,  1.00000000e+00,
+                1.00000000e+00, -1.95271141e+00,  9.75295685e-01],
+            [ 1.00000000e+00, -1.97011885e+00,  1.00000000e+00,
+                1.00000000e+00, -1.96423610e+00,  9.88608056e-01],
+            [ 1.00000000e+00, -1.97135784e+00,  1.00000000e+00,
+                1.00000000e+00, -1.97157693e+00,  9.96727086e-01]])
 
+        self.expected = resonance.db.Channels(self.si, self.time, [
+            [0.9999956457728436],
+            [0.9998856845859896],
+            [0.9996922260810797],
+            [0.9995835104416053],
+            [0.9994098250284402],
+            [0.9990290084376182],
+            [0.9986227124833477],
+            [0.9981390093158453],
+            [0.9973658219507505],
+            [0.9964321938525702],
+            [0.995376540372611],
+            [0.9939497244203274],
+            [0.9921853483758512],
+            [0.990191670593184],
+            [0.9877287730669551],
+            [0.984716747347071],
+            [0.9812986167220266],
+            [0.9772882572298995],
+            [0.9724999539302304],
+            [0.9670678889858805],
+            [0.9608913273476853],
+            [0.9537101297613507],
+            [0.9456077345179874],
+            [0.9365808526357045],
+            [0.9263437988327606],
+            [0.9148999105055002]
+
+        ])
+
+        self.expected_2nd_block = resonance.db.Channels(self.si, self.time * 2, [
+            0.902334505697907  , 0.8883930339363298 , 0.8729902011855285 ,
+            0.8562737901354316 , 0.838073432635541  , 0.8182309579728682 ,
+            0.7969205956112374 , 0.7740947767150123 , 0.7495601406713598 ,
+            0.7234808638393759 , 0.6959485315261055 , 0.6667864534104633 ,
+            0.6361208549327355 , 0.6041733791409692 , 0.5708385401953296 ,
+            0.5361919014341358 , 0.5005526955565343 , 0.46393114504771427,
+            0.42635711297382634, 0.38819837437575416, 0.34960426933748706,
+            0.3105793657064995 , 0.2714842752492728 , 0.2326028752846432 ,
+            0.1939438711618422 , 0.15580917088828433
+        ])
+
+    def test_single_channel(self):
+        self.check_processor([self.si], [self.db], {'out_0': [self.expected]}, resonance.pipe.sosfilt, self.sos)
+
+    def test_multiple_channels(self):
+        channels = 2
+
+        si = resonance.si.Channels(channels, self.si.samplingRate)
+        data = np.zeros((self.db.shape[0], channels))
+        data[:, 0] = self.db[:, 0]
+        data[:, 1] = self.db[:, 0]
+        data = resonance.db.Channels(si, 1E9, data)
+
+        expected = np.zeros_like(data)
+        expected[:, 0] = self.expected[:, 0]
+        expected[:, 1] = self.expected[:, 0]
+        expected = resonance.db.Channels(si, 1E9, expected)
+
+        self.check_processor([si], [data], {'out_0': [expected]}, resonance.pipe.sosfilt, self.sos)
+
+    def test_multiple_blocks(self):
+        data = resonance.db.Channels(self.si, self.time*2, self.db)
+        self.check_processor([self.si], [self.db, data], {'out_0': [self.expected, self.expected_2nd_block]}, resonance.pipe.sosfilt, self.sos)
