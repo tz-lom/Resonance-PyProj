@@ -100,8 +100,8 @@ def declare_transformation(operator: type) -> object:
 
 
 class Processor:
-    def call(self, *inputs):
-        outputs_si = self.prepare(*inputs)
+    def call(self, *inputs, **kwargs):
+        outputs_si = self.prepare(*inputs, **kwargs)
 
         data_streams = list(
             filter(lambda x: isinstance(x, DataBlockBase), inputs))

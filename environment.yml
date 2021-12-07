@@ -1,0 +1,11 @@
+name: Resonance-PyProj
+channels:
+  - bcilab
+  - defaults
+dependencies:
+  - python=3.8
+  - scipy
+  - h5py
+  - numpy_ringbuffer
+  - pytest
+

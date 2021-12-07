@@ -1,1 +1,2 @@
 from resonance.cross.windowize_by_events import windowize_by_events
+from resonance.cross.combine_sequential_events import combine_sequential_events

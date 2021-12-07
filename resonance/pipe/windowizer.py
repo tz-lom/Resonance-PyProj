@@ -14,7 +14,7 @@ class windowizer(Processor):
         self._unfilled = 0
         self._shift = 0
 
-    def prepare(self, inp: db.Event, size, shift):
+    def prepare(self, inp: db.Channels, size, shift):
         if not isinstance(inp, db.Channels):
             raise Exception("input must be channels")
 

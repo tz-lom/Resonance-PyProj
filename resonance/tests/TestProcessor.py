@@ -64,11 +64,29 @@ class TestProcessor(unittest.TestCase):
                         expected,
                         processor,
                         *arguments,
-                        only_offline=False):
+                        **kwarguments):
+        self._check_processor_impl(si, blocks, expected, False, processor, *arguments, **kwarguments)
+
+    def check_processor_only_offline(self,
+                                     si,
+                                     blocks,
+                                     expected,
+                                     processor,
+                                     *arguments,
+                                     **kwarguments):
+        self._check_processor_impl(si, blocks, expected, True, processor, *arguments, **kwarguments)
+
+    def _check_processor_impl(self,
+                              si,
+                              blocks,
+                              expected,
+                              only_offline,
+                              processor,
+                              *arguments,
+                              **kwarguments):
         def code():
             inputs = [resonance.input(idx) for idx in range(0, len(si))]
-            args = inputs + list(arguments)
-            outputs = processor(*args)
+            outputs = processor(*inputs, *arguments, **kwarguments)
             if isinstance(outputs, tuple):
                 for idx, out in enumerate(outputs):
                     resonance.createOutput(out, 'out_{}'.format(idx))
@@ -133,12 +151,12 @@ class TestProcessor(unittest.TestCase):
                 )
 
                 self.__assertResultsOnline(
-                    expected, online, "Online did not match the expectations")
+                    expected, online, f"Online did not match the expectation\n{online}Failure\n")
 
                 online_merged = resonance.run.online(si, blocks_copy, code)
 
                 self.__assertResultsOffline(
-                    online_merged, offline, "Offline not equals online merged")
+                    online_merged, offline, f"Offline not equals online merged: {offline} != {online_merged}")
 
     @staticmethod
     def generate_channels_sequence(si: resonance.si.Channels, block_sizes: List[int], initial_sample: np.int64 = 0,

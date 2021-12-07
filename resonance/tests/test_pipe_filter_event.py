@@ -15,11 +15,10 @@ class TestPipeFilterEvent(TestProcessor):
 
     def test_empty(self):
         rule = lambda x: True
-        self.check_processor(
+        self.check_processor_only_offline(
             [self.si], [], {'out_0': [resonance.db.Event.make_empty(self.si)]},
             resonance.pipe.filter_event,
-            rule,
-            only_offline=True)
+            rule)
 
     def test_filter(self):
         def rule(x):

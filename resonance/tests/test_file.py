@@ -1,6 +1,7 @@
 import unittest
 import resonance.file
 import numpy as np
+import os
 
 
 class TestHdf5(unittest.TestCase):
@@ -14,6 +15,7 @@ class TestHdf5(unittest.TestCase):
     #     self.assertEqual(1, len(si))
     #     self.assertEqual(12, len(blocks))
 
+    @unittest.skipIf(os.name == 'nt', "Crash on windows")
     def test_channels_and_events(self):
         sis, blocks = resonance.file.hdf5('test_eeg_events.h5')
         self.assertEqual(2, len(sis))
