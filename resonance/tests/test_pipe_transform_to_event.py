@@ -47,3 +47,19 @@ class MyTestCase(TestProcessor):
 
         self.check_processor([si], data, {'out_0': expected},
                              resonance.pipe.transform_to_event, transform)
+
+    def test_transform_which_return_event(self):
+        si = resonance.si.Event()
+        data = [resonance.db.Event(si, 1, '1'), resonance.db.Event(si, 2, '2')]
+
+        def transform(x):
+            dummy_si = resonance.si.Event()
+            return resonance.db.Event(dummy_si, x.TS + 10, '_' + x)
+
+        expected = [
+            resonance.db.Event(si, 11, '_1'),
+            resonance.db.Event(si, 12, '_2')
+        ]
+
+        self.check_processor([si], data, {'out_0': expected},
+                             resonance.pipe.transform_to_event, transform, pass_metadata=True)
