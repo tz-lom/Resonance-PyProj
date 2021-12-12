@@ -21,6 +21,7 @@ requirements:
     - numpy
     - numpy_ringbuffer
     - scipy
+    - h5py
 
 test:
   imports:
