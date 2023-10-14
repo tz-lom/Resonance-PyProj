@@ -2,7 +2,7 @@ from resonance.db import Base as DataBlockBase
 import resonance.si
 import numpy as np
 import typing
-from collections import Sequence
+from collections.abc import Sequence
 
 
 class ExecutionPlan:

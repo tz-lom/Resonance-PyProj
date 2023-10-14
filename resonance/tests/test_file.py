@@ -17,7 +17,7 @@ class TestHdf5(unittest.TestCase):
 
     @unittest.skipIf(os.name == 'nt', "Crash on windows")
     def test_channels_and_events(self):
-        sis, blocks = resonance.file.hdf5('test_eeg_events.h5')
+        sis, blocks = resonance.file.hdf5(os.path.join(os.path.dirname(__file__), 'test_eeg_events.h5'))
         self.assertEqual(2, len(sis))
         self.assertEqual(115, len(blocks))
 

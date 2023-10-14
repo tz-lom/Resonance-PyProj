@@ -57,7 +57,10 @@ class Event(Base):
         obj[0] = message
 
         timestamp = np.empty(1, dtype=np.int64)
-        timestamp[0] = ts
+        if isinstance(ts, np.ndarray):
+            timestamp[0] = np.squeeze(ts)
+        else:
+            timestamp[0] = ts
 
         Base.__new__(obj, si, timestamp)
         return obj
@@ -81,7 +84,7 @@ class Event(Base):
 
     @staticmethod
     def make_empty(si):
-        obj = np.empty(0, dtype=np.object).view(Event)
+        obj = np.empty(0, dtype=object).view(Event)
         ts = np.empty(0, dtype=np.int64)
         Base.__new__(obj, si, ts)
         return obj
