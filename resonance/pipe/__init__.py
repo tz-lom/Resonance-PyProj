@@ -5,5 +5,6 @@ from resonance.pipe.baseline import baseline
 from resonance.pipe.transform_channels import transform_channels
 from resonance.pipe.transform_to_event import transform_to_event
 from resonance.pipe.bit_signal_to_event import bit_signal_to_event
+from .fft import fft
 from .filter_event import filter_event
 from .windowizer import windowizer
