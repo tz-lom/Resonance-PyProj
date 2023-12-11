@@ -16,6 +16,20 @@ class Base(np.ndarray):
         cls._si = si
         cls._ts = timestamp
 
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self._si = getattr(obj, "_si", None)
+        self._ts = getattr(obj, "_ts", None)
+
+    def __reduce__(self):
+        pickled = super(Base, self).__reduce__()
+        return pickled[0], pickled[1], pickled[2] + (self.__dict__,)
+
+    def __setstate__(self, state):
+        self.__dict__.update(state[-1])
+        super(Base, self).__setstate__(state[0:-1])
+
     @property
     def SI(self):
         return self._si
@@ -33,8 +47,8 @@ class Base(np.ndarray):
         self._ts = ts
 
     def __array_finalize__(self, obj):
-        self._si = getattr(obj, '_si', None)
-        self._ts = getattr(obj, '_ts', None)
+        self._si = getattr(obj, "_si", None)
+        self._ts = getattr(obj, "_ts", None)
 
     def __getitem__(self, index):
         if not isinstance(index, tuple):
@@ -70,15 +84,21 @@ class Event(Base):
 
     def __eq__(self, other):
         if isinstance(other, Event):
-            return (self._si == other._si) and np.array_equal(
-                self._ts, other._ts) and np.array_equal(self, other)
+            return (
+                (self._si == other._si)
+                and np.array_equal(self._ts, other._ts)
+                and np.array_equal(self, other)
+            )
         else:
             return np.array_equal(self[0], other)
 
     def is_similar(self, other):
         if isinstance(other, Event):
-            return self._si.is_similar(other._si) and np.array_equal(
-                self._ts, other._ts) and np.array_equal(self, other)
+            return (
+                self._si.is_similar(other._si)
+                and np.array_equal(self._ts, other._ts)
+                and np.array_equal(self, other)
+            )
         else:
             return np.array_equal(self, other)
 
@@ -113,9 +133,9 @@ class Channels(Base):
 
         if isinstance(ts, numbers.Number):
             ts = np.asarray(
-                ts -
-                np.flip(np.arange(0, np.size(obj, 0))) * 1E9 / si.samplingRate,
-                dtype=np.int64)
+                ts - np.flip(np.arange(0, np.size(obj, 0))) * 1e9 / si.samplingRate,
+                dtype=np.int64,
+            )
         else:
             ts = np.asarray(ts, dtype=np.int64)
 
@@ -127,15 +147,21 @@ class Channels(Base):
 
     def __eq__(self, other):
         if isinstance(other, Channels):
-            return (self._si == other._si) and np.array_equal(
-                self._ts, other._ts) and np.array_equal(self, other)
+            return (
+                (self._si == other._si)
+                and np.array_equal(self._ts, other._ts)
+                and np.array_equal(self, other)
+            )
         else:
             return np.array_equal(self, other)
 
     def is_similar(self, other):
         if isinstance(other, Channels):
-            return self._si.is_similar(other._si) and np.array_equal(
-                self._ts, other._ts) and np.array_equal(self, other)
+            return (
+                self._si.is_similar(other._si)
+                and np.array_equal(self._ts, other._ts)
+                and np.array_equal(self, other)
+            )
         else:
             return np.array_equal(self, other)
 
@@ -155,29 +181,34 @@ class Channels(Base):
 
 
 class SingleWindow(np.ndarray):
-    def __new__(cls,
-                timestamps: np.ndarray,
-                data: np.ndarray,
-                metadata: Any = None):
+    def __new__(cls, timestamps: np.ndarray, data: np.ndarray, metadata: Any = None):
         obj = data.view(SingleWindow)
         obj._timestamps = timestamps
         obj._metadata = metadata
         return obj
+
+    def __array_finalize(self, obj):
+        if obj is None:
+            return
+        self._timestamps = getattr(obj, "_timestamps", None)
+        self._metadata = getattr(obj, "_metadata", None)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __eq__(self, other):
         if isinstance(other, SingleWindow):
-            return np.array_equal(self._timestamps, other._timestamps) \
-                   and np.array_equal(self, other) \
-                   and np.array_equal(self.metadata, other.metadata)
+            return (
+                np.array_equal(self._timestamps, other._timestamps)
+                and np.array_equal(self, other)
+                and np.array_equal(self.metadata, other.metadata)
+            )
         else:
             return np.array_equal(self, other)
 
     def __array_finalize__(self, obj):
-        self._timestamps = getattr(obj, '_timestamps', None)
-        self._metadata = getattr(obj, '_metadata', None)
+        self._timestamps = getattr(obj, "_timestamps", None)
+        self._metadata = getattr(obj, "_metadata", None)
 
     @property
     def metadata(self):
@@ -198,9 +229,11 @@ class SingleWindow(np.ndarray):
 
 class Window(Base):
     def __new__(cls, si, ts, data, metadata: Any = None):
-
-        if isinstance(data, np.ndarray) and (len(data) > 0) and isinstance(
-                data[0], SingleWindow):
+        if (
+            isinstance(data, np.ndarray)
+            and (len(data) > 0)
+            and isinstance(data[0], SingleWindow)
+        ):
             obj = data.view(Window)
             Base.__new__(obj, si, None)
             return obj
@@ -218,8 +251,9 @@ class Window(Base):
                 raise Exception("Invalid window size")
 
             if not isinstance(ts, np.ndarray):
-                ts = ts - np.flip(np.arange(0, np.size(
-                    data, 0))) * 1E9 / si.samplingRate
+                ts = (
+                    ts - np.flip(np.arange(0, np.size(data, 0))) * 1e9 / si.samplingRate
+                )
 
             ts = np.array(ts, dtype=np.int64)
 
@@ -235,15 +269,13 @@ class Window(Base):
 
     def __eq__(self, other):
         if isinstance(other, Window):
-            return (self._si == other._si) \
-                   and np.array_equal(self, other)
+            return (self._si == other._si) and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
 
     def is_similar(self, other):
         if isinstance(other, Window):
-            return self._si.is_similar(other._si) \
-                   and np.array_equal(self, other)
+            return self._si.is_similar(other._si) and np.array_equal(self, other)
         else:
             return np.array_equal(self, other)
 
