@@ -1,6 +1,7 @@
 from resonance.db import Base as DataBlockBase
 import resonance.si
 import numpy as np
+from functools import wraps
 import typing
 from collections.abc import Sequence
 
@@ -14,8 +15,9 @@ class ExecutionPlan:
         self.reset([])
 
     def __repr__(self):
-        return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}" \
-            .format(self._plan, self._inputs_data, self._next_output_id, self._next_stream_id)
+        return "ExecutionPlan\nplan={}\ninputs_data={}\nnext_output_id={}\nnext_stream_id={}".format(
+            self._plan, self._inputs_data, self._next_output_id, self._next_stream_id
+        )
 
     def steps_for_input(self, si):
         return [step for step in self._plan if step.has_input(si)]
@@ -57,8 +59,9 @@ class ExecutionStep:
         self.call = call
 
     def __repr__(self):
-        return "ExecutionStep\ninputs={}\noutputs={}\ncall={}" \
-            .format(self.inputs, self.outputs, self.call)
+        return "ExecutionStep\ninputs={}\noutputs={}\ncall={}".format(
+            self.inputs, self.outputs, self.call
+        )
 
     def has_input(self, si):
         return si in self.inputs
@@ -92,6 +95,7 @@ def declare_transformation(operator: type) -> object:
     if not issubclass(operator, Processor):
         raise Exception
 
+    @wraps(operator.prepare)
     def call(*args, **kwargs):
         x = operator()
         return x.call(*args, **kwargs)
@@ -103,8 +107,7 @@ class Processor:
     def call(self, *inputs, **kwargs):
         outputs_si = self.prepare(*inputs, **kwargs)
 
-        data_streams = list(
-            filter(lambda x: isinstance(x, DataBlockBase), inputs))
+        data_streams = list(filter(lambda x: isinstance(x, DataBlockBase), inputs))
         assert len(data_streams) > 0
         if data_streams[0].SI.online:
             assert all(map(lambda s: s.SI.online, data_streams))
@@ -119,7 +122,7 @@ class Processor:
             else:
                 return resonance.db.make_empty(outputs_si)
         else:
-            if getattr(self, 'offline', None) is None:
+            if getattr(self, "offline", None) is None:
                 return self.online(*data_streams)
             else:
                 return self.offline(*data_streams)
@@ -133,24 +136,24 @@ class create_output(Processor):
         self._callback = None
 
     def _send_data(self, data):
-        add_to_queue('sendBlockToStream', (self._si, data))
+        add_to_queue("sendBlockToStream", (self._si, data))
         return resonance.db.OutputStream(self._si)
 
     def _send_channels(self, data: resonance.db.Channels):
         if np.size(data, 1) > 0:
-            add_to_queue('sendBlockToStream', (self._si, data))
+            add_to_queue("sendBlockToStream", (self._si, data))
         return resonance.db.OutputStream(self._si)
 
     def _send_event(self, data: resonance.db.Event):
         if len(data) > 0:
             for i in range(data.shape[0]):
-                add_to_queue('sendBlockToStream', (self._si, data[i:i + 1]))
+                add_to_queue("sendBlockToStream", (self._si, data[i : i + 1]))
         return resonance.db.OutputStream(self._si)
 
     def _send_window(self, data: resonance.db.Window):
         if len(data) > 0:
             for i in range(data.shape[0]):
-                add_to_queue('sendBlockToStream', (self._si, data[i:i + 1]))
+                add_to_queue("sendBlockToStream", (self._si, data[i : i + 1]))
         return resonance.db.OutputStream(self._si)
 
     def prepare(self, stream: resonance.db.Base, name: str):
@@ -168,7 +171,7 @@ class create_output(Processor):
             raise Exception("Unsupported stream type")
         self._si = resonance.si.OutputStream(sid, name, stream.SI)
         self._stream_si = stream.SI
-        add_to_queue('createOutputStream', self._si)
+        add_to_queue("createOutputStream", self._si)
         return self._si
 
     def online(self, data: resonance.db.Base):

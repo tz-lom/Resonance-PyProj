@@ -7,9 +7,16 @@ try:
     import resonance.si as si
     import resonance.internal
 
-    resonate.register_callbacks(events.on_prepare, events.on_data_block,
-                                events.on_start, events.on_stop, si.Channels,
-                                si.Event, db.Event, db.Channels)
+    resonate.register_callbacks(
+        events.on_prepare,
+        events.on_data_block,
+        events.on_start,
+        events.on_stop,
+        si.Channels,
+        si.Event,
+        db.Event,
+        db.Channels,
+    )
 
     resonance.internal.add_to_queue = resonate.add_to_queue
 
@@ -17,6 +24,7 @@ except:
     pass
 
 from .split import split
+from .simulation import playback
 
 
 def __input(idx: int):
@@ -31,5 +39,5 @@ def __createOutput(name: str, data: db.Base):
     raise Exception("Can't execute directly")
 
 
-def createOutput(name: str, data: db.Base):
-    return __createOutput(name, data)
+def createOutput(data: db.Base, name: str):
+    return __createOutput(data, name)

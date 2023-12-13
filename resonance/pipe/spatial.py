@@ -11,6 +11,11 @@ class spatial(Processor):
         self._si = None
 
     def prepare(self, channels: db.Channels, matrix: np.ndarray):
+        """
+        :param channels: db.Channels
+        :param matrix: np.ndarray
+        :return:
+        """
         if not isinstance(channels, db.Channels):
             raise Exception("Input must be Channels")
         if len(matrix.shape) != 2:
@@ -19,7 +24,9 @@ class spatial(Processor):
             raise Exception("Number of rows in matrix should match number of channels")
 
         self._matrix = matrix
-        self._si = si.Channels(channels=np.size(matrix, 1), samplingRate=channels.SI.samplingRate)
+        self._si = si.Channels(
+            channels=np.size(matrix, 1), samplingRate=channels.SI.samplingRate
+        )
 
         return self._si
 
