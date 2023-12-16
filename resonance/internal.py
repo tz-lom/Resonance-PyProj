@@ -5,6 +5,8 @@ from functools import wraps
 import typing
 from collections.abc import Sequence
 
+running_in_speed = False
+
 
 class ExecutionPlan:
     def __init__(self):
@@ -160,15 +162,16 @@ class create_output(Processor):
         global execution_plan
 
         sid = execution_plan.next_output_id()
-
-        if isinstance(stream.SI, resonance.si.Channels):
-            self._callback = self._send_data
-        elif isinstance(stream.SI, resonance.si.Event):
-            self._callback = self._send_data
-        elif isinstance(stream.SI, resonance.si.Window):
-            self._callback = self._send_data
-        else:
-            raise Exception("Unsupported stream type")
+        self._callback = self._send_data
+        if running_in_speed:
+            if isinstance(stream.SI, resonance.si.Channels):
+                self._callback = self._send_channels
+            elif isinstance(stream.SI, resonance.si.Event):
+                self._callback = self._send_event
+            elif isinstance(stream.SI, resonance.si.Window):
+                self._callback = self._send_window
+            else:
+                raise Exception("Unsupported stream type")
         self._si = resonance.si.OutputStream(sid, name, stream.SI)
         self._stream_si = stream.SI
         add_to_queue("createOutputStream", self._si)

@@ -19,6 +19,7 @@ try:
     )
 
     resonance.internal.add_to_queue = resonate.add_to_queue
+    resonance.running_in_speed = True
 
 except:
     pass

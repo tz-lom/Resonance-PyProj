@@ -11,6 +11,6 @@ def playback(file: str, code, online=False, cache=3):
     (si, data) = load(file)
 
     if online:
-        return resonance.run.online(si, data, code)
+        return resonance.run.online(si, data, code, return_blocks=True)
     else:
         return resonance.run.offline(si, data, code)
