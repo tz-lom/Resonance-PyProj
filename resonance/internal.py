@@ -163,7 +163,7 @@ class create_output(Processor):
 
         sid = execution_plan.next_output_id()
         self._callback = self._send_data
-        if running_in_speed:
+        if resonance.internal.running_in_speed:
             if isinstance(stream.SI, resonance.si.Channels):
                 self._callback = self._send_channels
             elif isinstance(stream.SI, resonance.si.Event):
