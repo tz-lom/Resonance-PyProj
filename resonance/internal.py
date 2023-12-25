@@ -148,8 +148,8 @@ class create_output(Processor):
 
     def _send_event(self, data: resonance.db.Event):
         if len(data) > 0:
-            for i in range(data.shape[0]):
-                add_to_queue("sendBlockToStream", (self._si, data[i : i + 1]))
+            for i in range(len(data)):
+                add_to_queue("sendBlockToStream", (self._si, data[i: i + 1]))
         return resonance.db.OutputStream(self._si)
 
     def _send_window(self, data: resonance.db.Window):
