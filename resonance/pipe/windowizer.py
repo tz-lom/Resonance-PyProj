@@ -19,7 +19,9 @@ class windowizer(Processor):
             raise Exception("input must be channels")
 
         self._si = si.Window(inp.SI.channels, size, inp.SI.samplingRate)
-        self._window = RingBuffer(size, dtype=(float, (inp.SI.channels,)), allow_overwrite=True)
+        self._window = RingBuffer(
+            size, dtype=(float, (inp.SI.channels,)), allow_overwrite=True
+        )
         self._times = RingBuffer(size, dtype=np.int64, allow_overwrite=True)
         self._unfilled = size
         self._shift = shift
@@ -31,7 +33,7 @@ class windowizer(Processor):
         result = db.make_empty(self._si)
         while add > 0:
             if add >= self._unfilled:
-                segment = inp[total - add: total - add + self._unfilled]
+                segment = inp[total - add : total - add + self._unfilled]
                 self._window.extend(segment)
                 self._times.extend(segment.TS)
 
@@ -41,8 +43,9 @@ class windowizer(Processor):
                 add = add - self._unfilled
                 self._unfilled = self._shift
             else:
-                self._window.extend(inp)
-                self._times.extend(inp.TS)
+                segment = inp[total - add : total]
+                self._window.extend(segment)
+                self._times.extend(segment.TS)
                 self._unfilled -= add
                 add = 0
 
